@@ -1,0 +1,98 @@
+@import "theme.css";
+@import "componenets/header.css";
+@import "componenets/button.css";
+@import "componenets/footer.css";
+@import "contactUs.css";
+
+.services {
+    padding: 80px 20px;
+  }
+  
+  .services-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .services h2 {
+    margin: 0 0 16px 0;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+  }
+  
+  .services-subtitle {
+    margin: 0 auto 60px;
+    font-size: 1.1rem;
+    color: #fff;
+    opacity: 0.7;
+    max-width: 700px;
+  }
+  
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 35px;
+    text-align: left;
+  }
+  
+  .service-item {
+    padding: 25px;
+    background: transparent;
+    border-left: 3px solid rgba(255, 87, 34, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  .service-item:hover {
+    border-left-color: var(--primary-color);
+    padding-left: 30px;
+  }
+  
+  .service-item h3 {
+    margin: 0 0 12px 0;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+  
+  .service-item p {
+    margin: 0;
+    color: #fff;
+    opacity: 0.75;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  
+  @media (max-width: 900px) {
+    .services {
+      padding: 60px 20px;
+    }
+    
+    .services h2 {
+      font-size: 2rem;
+    }
+    
+    .services-grid {
+      gap: 30px;
+    }
+  }
+  
+  @media (max-width: 550px) {
+    .services {
+      padding: 40px 16px;
+    }
+    
+    .services h2 {
+      font-size: 1.8rem;
+    }
+    
+    .services-subtitle {
+      font-size: 1rem;
+      margin-bottom: 40px;
+    }
+    
+    .services-grid {
+      grid-template-columns: 1fr;
+      gap: 25px;
+    }
+  }
+  
