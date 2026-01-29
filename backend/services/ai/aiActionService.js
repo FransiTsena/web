@@ -1,9 +1,9 @@
-const { collections } = require('../db');
-const clientService = require('./clientService');
-const projectService = require('./projectService');
-const invoiceService = require('./invoiceService');
-const paymentService = require('./paymentService');
-const expenseService = require('./expenseService');
+const { collections } = require('../../db');
+const clientService = require('../clientService');
+const projectService = require('../projectService');
+const invoiceService = require('../invoiceService');
+const paymentService = require('../paymentService');
+const expenseService = require('../expenseService');
 
 /**
  * AI Action Service

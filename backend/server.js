@@ -7,6 +7,8 @@ const invoiceService = require('./services/invoiceService');
 const paymentService = require('./services/paymentService');
 const expenseService = require('./services/expenseService');
 const contributionService = require('./services/contributionService');
+const aiChatService = require('./services/ai/aiChatService');
+const aiActionService = require('./services/ai/aiActionService');
 
 // CORS settings
 const corsHeaders = {
@@ -186,6 +188,20 @@ const requestHandler = async (req, res) => {
                     if (isNaN(year)) return sendJsonResponse(res, 400, { error: 'Invalid year' });
                     const contributions = await contributionService.getYearlyContributions(year);
                     sendJsonResponse(res, 200, contributions);
+                }
+            }
+
+            // AI Routes
+            else if (resource === 'ai') {
+                if (method === 'POST') {
+                    const body = await parseBody(req);
+                    if (pathParts[2] === 'chat') {
+                        const response = await aiChatService.processChat(body.message, body.history);
+                        sendJsonResponse(res, 200, response);
+                    } else if (pathParts[2] === 'execute') {
+                        const result = await aiActionService.executeAction(body.type, body.data);
+                        sendJsonResponse(res, 200, result);
+                    }
                 }
             }
 
