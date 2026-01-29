@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Users, Briefcase, FileText, CreditCard, PieChart, Menu, X, Sparkles } from 'lucide-react';
+import { Home, Users, Briefcase, FileText, CreditCard, PieChart, Menu, X, Bot } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
@@ -13,7 +13,7 @@ const Sidebar = () => {
     { icon: <FileText size={24} />, path: '/invoices', label: 'Invoices' },
     { icon: <CreditCard size={24} />, path: '/payments', label: 'Payments' },
     { icon: <PieChart size={24} />, path: '/expenses', label: 'Expenses' },
-    { icon: <Sparkles size={24} />, path: '/ai-chat', label: 'AI Assistant' },
+    { icon: <Bot size={24} />, path: '/ai-chat', label: 'AI Assistant' },
   ];
 
   const toggleSidebar = () => setIsOpen(!isOpen);
