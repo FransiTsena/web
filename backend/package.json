@@ -1,0 +1,22 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-runner.js",
+    "test:dev": "nodemon test/api.test.js",
+    "test:comprehensive": "node test/comprehensive.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "mongodb": "^7.0.0",
+    "react-router-dom": "^7.12.0"
+  }
+}
