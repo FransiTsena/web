@@ -129,6 +129,7 @@ const requestHandler = async (req, res) => {
             } else if (path.match(/^\/api\/projects\/\w+$/) && method === 'PUT') {
                 const projectId = path.split('/')[3];
                 const body = await parseBody(req);
+                delete body._id; // Prevent MongoDB error trying to update immutable _id
                 const result = await projectsCollection.updateOne(
                     { _id: new ObjectId(projectId) },
                     { $set: { ...body, updatedAt: new Date() } }
@@ -154,11 +155,11 @@ const requestHandler = async (req, res) => {
                 sendJsonResponse(res, 200, invoices);
             } else if (path === '/api/invoices' && method === 'POST') {
                 const body = await parseBody(req);
-                // Calculate totals if not provided
-                if (!body.total && body.items) {
-                    body.subtotal = body.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-                    body.taxAmount = body.taxRate ? body.subtotal * (body.taxRate / 100) : 0;
-                    body.total = body.subtotal + body.taxAmount - (body.discount || 0);
+                // Calculate totals if items are provided
+                if (body.items) {
+                    body.subtotal = body.items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.price)), 0);
+                    body.taxAmount = body.taxRate ? body.subtotal * (parseFloat(body.taxRate) / 100) : 0;
+                    body.total = body.subtotal + body.taxAmount - (parseFloat(body.discount) || 0);
                 }
                 const result = await invoicesCollection.insertOne(body);
                 sendJsonResponse(res, 201, { id: result.insertedId, ...body });
@@ -173,6 +174,20 @@ const requestHandler = async (req, res) => {
             } else if (path.match(/^\/api\/invoices\/\w+$/) && method === 'PUT') {
                 const invoiceId = path.split('/')[3];
                 const body = await parseBody(req);
+                delete body._id; // Prevent MongoDB error trying to update immutable _id
+                
+                // Recalculate totals on update if items are present
+                if (body.items) {
+                    body.subtotal = body.items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.price)), 0);
+                    // Preserve existing taxRate/discount if not in body
+                    const existing = await invoicesCollection.findOne({ _id: new ObjectId(invoiceId) });
+                    const taxRate = body.taxRate !== undefined ? body.taxRate : (existing?.taxRate || 0);
+                    const discount = body.discount !== undefined ? body.discount : (existing?.discount || 0);
+                    
+                    body.taxAmount = body.subtotal * (taxRate / 100);
+                    body.total = body.subtotal + body.taxAmount - discount;
+                }
+
                 const result = await invoicesCollection.updateOne(
                     { _id: new ObjectId(invoiceId) },
                     { $set: { ...body, updatedAt: new Date() } }
@@ -211,6 +226,7 @@ const requestHandler = async (req, res) => {
             } else if (path.match(/^\/api\/payments\/\w+$/) && method === 'PUT') {
                 const paymentId = path.split('/')[3];
                 const body = await parseBody(req);
+                delete body._id; // Prevent MongoDB error trying to update immutable _id
                 const result = await paymentsCollection.updateOne(
                     { _id: new ObjectId(paymentId) },
                     { $set: { ...body, updatedAt: new Date() } }
@@ -249,6 +265,7 @@ const requestHandler = async (req, res) => {
             } else if (path.match(/^\/api\/expenses\/\w+$/) && method === 'PUT') {
                 const expenseId = path.split('/')[3];
                 const body = await parseBody(req);
+                delete body._id; // Prevent MongoDB error trying to update immutable _id
                 const result = await expensesCollection.updateOne(
                     { _id: new ObjectId(expenseId) },
                     { $set: { ...body, updatedAt: new Date() } }
