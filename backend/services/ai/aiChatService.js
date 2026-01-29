@@ -4,9 +4,9 @@ const aiActionService = require('./aiActionService');
 const OLLAMA_API = 'http://localhost:11434/api/generate';
 
 const aiChatService = {
-  processChat: async (message, history = []) => {
+  processChat: async (message, history = [], userId) => {
     // 1. Get system context (clients/projects) to help the AI reconcile names
-    const context = await aiActionService.getSystemContext();
+    const context = await aiActionService.getSystemContext(userId);
 
     // 2. Prepare the prompt
     const systemPrompt = `

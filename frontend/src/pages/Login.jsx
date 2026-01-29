@@ -1,0 +1,137 @@
+import React, { useState } from 'react';
+import { Mail, Lock, LogIn } from 'lucide-react';
+import { authService } from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
+
+const Login = ({ onLogin }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const { data } = await authService.login({ email, password });
+      localStorage.setItem('token', data.token);
+      onLogin(data.user);
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ 
+      height: '100vh', 
+      width: '100vw', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      backgroundColor: '#f5f5f5',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
+      <div className="glass-card" style={{ 
+        width: '90%',
+        maxWidth: '400px', 
+        padding: '2.5rem', 
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2rem'
+      }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome Back</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Log in to manage your freelance business.</p>
+        </div>
+
+        {error && (
+          <div style={{ 
+            padding: '1rem', 
+            backgroundColor: '#fee2e2', 
+            color: '#b91c1c', 
+            borderRadius: '0.5rem',
+            fontSize: '0.9rem',
+            textAlign: 'left'
+          }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'left' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Email Address</label>
+            <div style={{ position: 'relative' }}>
+              <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+              <input 
+                required 
+                type="email" 
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '1rem 1rem 1rem 2.5rem', 
+                  borderRadius: '1rem', 
+                  border: '1px solid #ddd',
+                  outline: 'none',
+                  fontSize: '1rem'
+                }} 
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Password</label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+              <input 
+                required 
+                type="password" 
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '1rem 1rem 1rem 2.5rem', 
+                  borderRadius: '1rem', 
+                  border: '1px solid #ddd',
+                  outline: 'none',
+                  fontSize: '1rem'
+                }} 
+              />
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className="pill-button active" style={{ 
+            width: '100%', 
+            justifyContent: 'center', 
+            padding: '1rem',
+            marginTop: '1rem',
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}>
+            {loading ? 'Logging in...' : (
+              <>
+                <LogIn size={20} style={{ marginRight: '8px' }} />
+                Log In
+              </>
+            )}
+          </button>
+        </form>
+
+        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          Don't have an account? <Link to="/register" style={{ color: 'var(--primary-color)', fontWeight: '600', textDecoration: 'none' }}>Sign Up</Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

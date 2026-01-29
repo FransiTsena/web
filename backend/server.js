@@ -9,12 +9,14 @@ const expenseService = require('./services/expenseService');
 const contributionService = require('./services/contributionService');
 const aiChatService = require('./services/ai/aiChatService');
 const aiActionService = require('./services/ai/aiActionService');
+const { authService } = require('./services/authService');
+const authMiddleware = require('./middleware/authMiddleware');
 
 // CORS settings
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'OPTIONS, POST, GET, PUT, DELETE',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 // Helper function to send JSON response
@@ -57,30 +59,60 @@ const requestHandler = async (req, res) => {
 
     if (path.startsWith('/api/')) {
         try {
-            const pathParts = path.split('/').filter(Boolean); // ['', 'api', 'resource', 'id'] -> ['api', 'resource', 'id']
+            const pathParts = path.split('/').filter(Boolean);
             const resource = pathParts[1];
             const id = pathParts[2];
+
+            // 1. Public Routes (Auth)
+            if (resource === 'auth') {
+                if (id === 'register' && method === 'POST') {
+                    const body = await parseBody(req);
+                    const result = await authService.register(body);
+                    return sendJsonResponse(res, 201, result);
+                } else if (id === 'login' && method === 'POST') {
+                    const body = await parseBody(req);
+                    try {
+                        const result = await authService.login(body.email, body.password);
+                        return sendJsonResponse(res, 200, result);
+                    } catch (err) {
+                        return sendJsonResponse(res, 401, { error: err.message });
+                    }
+                }
+            }
+
+            // 2. Protected Routes (require middleware)
+            try {
+                await authMiddleware(req);
+            } catch (err) {
+                return sendJsonResponse(res, err.statusCode, { error: err.error });
+            }
+
+            // Profile Route
+            if (resource === 'auth' && id === 'profile' && method === 'GET') {
+                const profile = await authService.getProfile(req.user.userId);
+                return sendJsonResponse(res, 200, profile);
+            }
 
             // Client Routes
             if (resource === 'clients') {
                 if (method === 'GET') {
                     if (id) {
-                        const client = await clientService.getById(id);
+                        const client = await clientService.getById(id, req.user.userId);
                         client ? sendJsonResponse(res, 200, client) : sendJsonResponse(res, 404, { error: 'Client not found' });
                     } else {
-                        const clients = await clientService.getAll();
+                        const clients = await clientService.getAll(req.user.userId);
                         sendJsonResponse(res, 200, clients);
                     }
                 } else if (method === 'POST') {
                     const body = await parseBody(req);
-                    const newClient = await clientService.create(body);
+                    const newClient = await clientService.create(body, req.user.userId);
                     sendJsonResponse(res, 201, newClient);
                 } else if (method === 'PUT' && id) {
                     const body = await parseBody(req);
-                    const success = await clientService.update(id, body);
+                    const success = await clientService.update(id, body, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Updated' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 } else if (method === 'DELETE' && id) {
-                    const success = await clientService.delete(id);
+                    const success = await clientService.delete(id, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Deleted' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 }
             }
@@ -89,22 +121,22 @@ const requestHandler = async (req, res) => {
             else if (resource === 'projects') {
                 if (method === 'GET') {
                     if (id) {
-                        const project = await projectService.getById(id);
+                        const project = await projectService.getById(id, req.user.userId);
                         project ? sendJsonResponse(res, 200, project) : sendJsonResponse(res, 404, { error: 'Project not found' });
                     } else {
-                        const projects = await projectService.getAll();
+                        const projects = await projectService.getAll(req.user.userId);
                         sendJsonResponse(res, 200, projects);
                     }
                 } else if (method === 'POST') {
                     const body = await parseBody(req);
-                    const newProject = await projectService.create(body);
+                    const newProject = await projectService.create(body, req.user.userId);
                     sendJsonResponse(res, 201, newProject);
                 } else if (method === 'PUT' && id) {
                     const body = await parseBody(req);
-                    const success = await projectService.update(id, body);
+                    const success = await projectService.update(id, body, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Updated' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 } else if (method === 'DELETE' && id) {
-                    const success = await projectService.delete(id);
+                    const success = await projectService.delete(id, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Deleted' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 }
             }
@@ -113,22 +145,22 @@ const requestHandler = async (req, res) => {
             else if (resource === 'invoices') {
                 if (method === 'GET') {
                     if (id) {
-                        const invoice = await invoiceService.getById(id);
+                        const invoice = await invoiceService.getById(id, req.user.userId);
                         invoice ? sendJsonResponse(res, 200, invoice) : sendJsonResponse(res, 404, { error: 'Invoice not found' });
                     } else {
-                        const invoices = await invoiceService.getAll();
+                        const invoices = await invoiceService.getAll(req.user.userId);
                         sendJsonResponse(res, 200, invoices);
                     }
                 } else if (method === 'POST') {
                     const body = await parseBody(req);
-                    const newInvoice = await invoiceService.create(body);
+                    const newInvoice = await invoiceService.create(body, req.user.userId);
                     sendJsonResponse(res, 201, newInvoice);
                 } else if (method === 'PUT' && id) {
                     const body = await parseBody(req);
-                    const success = await invoiceService.update(id, body);
+                    const success = await invoiceService.update(id, body, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Updated' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 } else if (method === 'DELETE' && id) {
-                    const success = await invoiceService.delete(id);
+                    const success = await invoiceService.delete(id, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Deleted' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 }
             }
@@ -137,22 +169,22 @@ const requestHandler = async (req, res) => {
             else if (resource === 'payments') {
                 if (method === 'GET') {
                     if (id) {
-                        const payment = await paymentService.getById(id);
+                        const payment = await paymentService.getById(id, req.user.userId);
                         payment ? sendJsonResponse(res, 200, payment) : sendJsonResponse(res, 404, { error: 'Payment not found' });
                     } else {
-                        const payments = await paymentService.getAll();
+                        const payments = await paymentService.getAll(req.user.userId);
                         sendJsonResponse(res, 200, payments);
                     }
                 } else if (method === 'POST') {
                     const body = await parseBody(req);
-                    const newPayment = await paymentService.create(body);
+                    const newPayment = await paymentService.create(body, req.user.userId);
                     sendJsonResponse(res, 201, newPayment);
                 } else if (method === 'PUT' && id) {
                     const body = await parseBody(req);
-                    const success = await paymentService.update(id, body);
+                    const success = await paymentService.update(id, body, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Updated' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 } else if (method === 'DELETE' && id) {
-                    const success = await paymentService.delete(id);
+                    const success = await paymentService.delete(id, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Deleted' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 }
             }
@@ -161,22 +193,22 @@ const requestHandler = async (req, res) => {
             else if (resource === 'expenses') {
                 if (method === 'GET') {
                     if (id) {
-                        const expense = await expenseService.getById(id);
+                        const expense = await expenseService.getById(id, req.user.userId);
                         expense ? sendJsonResponse(res, 200, expense) : sendJsonResponse(res, 404, { error: 'Expense not found' });
                     } else {
-                        const expenses = await expenseService.getAll();
+                        const expenses = await expenseService.getAll(req.user.userId);
                         sendJsonResponse(res, 200, expenses);
                     }
                 } else if (method === 'POST') {
                     const body = await parseBody(req);
-                    const newExpense = await expenseService.create(body);
+                    const newExpense = await expenseService.create(body, req.user.userId);
                     sendJsonResponse(res, 201, newExpense);
                 } else if (method === 'PUT' && id) {
                     const body = await parseBody(req);
-                    const success = await expenseService.update(id, body);
+                    const success = await expenseService.update(id, body, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Updated' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 } else if (method === 'DELETE' && id) {
-                    const success = await expenseService.delete(id);
+                    const success = await expenseService.delete(id, req.user.userId);
                     success ? sendJsonResponse(res, 200, { message: 'Deleted' }) : sendJsonResponse(res, 404, { error: 'Not found' });
                 }
             }
@@ -186,7 +218,7 @@ const requestHandler = async (req, res) => {
                 if (method === 'GET' && id) {
                     const year = parseInt(id);
                     if (isNaN(year)) return sendJsonResponse(res, 400, { error: 'Invalid year' });
-                    const contributions = await contributionService.getYearlyContributions(year);
+                    const contributions = await contributionService.getYearlyContributions(year, req.user.userId);
                     sendJsonResponse(res, 200, contributions);
                 }
             }
@@ -196,10 +228,10 @@ const requestHandler = async (req, res) => {
                 if (method === 'POST') {
                     const body = await parseBody(req);
                     if (pathParts[2] === 'chat') {
-                        const response = await aiChatService.processChat(body.message, body.history);
+                        const response = await aiChatService.processChat(body.message, body.history, req.user.userId);
                         sendJsonResponse(res, 200, response);
                     } else if (pathParts[2] === 'execute') {
-                        const result = await aiActionService.executeAction(body.type, body.data);
+                        const result = await aiActionService.executeAction(body.type, body.data, req.user.userId);
                         sendJsonResponse(res, 200, result);
                     }
                 }

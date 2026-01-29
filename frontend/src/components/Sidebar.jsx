@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Home, Users, Briefcase, FileText, CreditCard, PieChart, Menu, X, Bot } from 'lucide-react';
+import { Home, Users, Briefcase, FileText, CreditCard, PieChart, Menu, X, Bot, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
-const Sidebar = () => {
+const Sidebar = ({ onLogout }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -57,6 +57,26 @@ const Sidebar = () => {
               <span className="sidebar-label">{item.label}</span>
             </Link>
           ))}
+          
+          <button 
+            onClick={onLogout}
+            className="sidebar-link"
+            style={{ 
+              width: '100%', 
+              background: 'none', 
+              border: 'none', 
+              cursor: 'pointer',        
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '0.8rem 1rem',
+              textAlign: 'left',
+              fontFamily: 'inherit'
+            }}
+          >
+            <LogOut size={24} />
+            <span className="sidebar-label">Logout</span>
+          </button>
         </div>
       </div>
       

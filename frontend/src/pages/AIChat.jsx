@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { aiService } from '../services/api';
-import { Send, User, Bot, Check, X, Sparkles, Loader2 } from 'lucide-react';
+import { Send, User, Bot, Check, X, Zap, Loader2 } from 'lucide-react';
 
 const AIChat = () => {
   const [messages, setMessages] = useState([
@@ -76,7 +76,7 @@ const AIChat = () => {
             boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.8rem', color: '#ff7a00' }}>
-              <Sparkles size={18} />
+              <Zap size={18} />
               <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Proposed Action</span>
             </div>
             <h4 style={{ margin: '0 0 0.5rem 0' }}>{actionData.summary}</h4>

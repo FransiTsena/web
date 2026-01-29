@@ -2,12 +2,12 @@ const { ObjectId } = require('mongodb');
 const { collections } = require('../db');
 
 const invoiceService = {
-  getAll: async () => {
-    return await collections.invoices.find({}).toArray();
+  getAll: async (userId) => {
+    return await collections.invoices.find({ userId }).toArray();
   },
 
-  getById: async (id) => {
-    return await collections.invoices.findOne({ _id: new ObjectId(id) });
+  getById: async (id, userId) => {
+    return await collections.invoices.findOne({ _id: new ObjectId(id), userId });
   },
 
   calculateTotals: (data) => {
@@ -19,18 +19,19 @@ const invoiceService = {
     return data;
   },
 
-  create: async (data) => {
+  create: async (data, userId) => {
     const processedData = invoiceService.calculateTotals(data);
-    const result = await collections.invoices.insertOne(processedData);
-    return { id: result.insertedId, ...processedData };
+    const document = { ...processedData, userId, createdAt: new Date() };
+    const result = await collections.invoices.insertOne(document);
+    return { id: result.insertedId, ...document };
   },
 
-  update: async (id, data) => {
+  update: async (id, data, userId) => {
     delete data._id;
     
     // If items are present, we might need to recalculate totals
     if (data.items) {
-      const existing = await collections.invoices.findOne({ _id: new ObjectId(id) });
+      const existing = await collections.invoices.findOne({ _id: new ObjectId(id), userId });
       const taxRate = data.taxRate !== undefined ? data.taxRate : (existing?.taxRate || 0);
       const discount = data.discount !== undefined ? data.discount : (existing?.discount || 0);
       
@@ -40,14 +41,14 @@ const invoiceService = {
     }
 
     const result = await collections.invoices.updateOne(
-      { _id: new ObjectId(id) },
+      { _id: new ObjectId(id), userId },
       { $set: { ...data, updatedAt: new Date() } }
     );
     return result.matchedCount > 0;
   },
 
-  delete: async (id) => {
-    const result = await collections.invoices.deleteOne({ _id: new ObjectId(id) });
+  delete: async (id, userId) => {
+    const result = await collections.invoices.deleteOne({ _id: new ObjectId(id), userId });
     return result.deletedCount > 0;
   }
 };

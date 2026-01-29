@@ -1,12 +1,12 @@
 const { collections } = require('../db');
 
 const contributionService = {
-  getYearlyContributions: async (year) => {
+  getYearlyContributions: async (year, userId) => {
     // Fetch real data from the database
     const [invoices, payments, expenses] = await Promise.all([
-      collections.invoices.find({}).toArray(),
-      collections.payments.find({}).toArray(),
-      collections.expenses.find({}).toArray()
+      collections.invoices.find({ userId }).toArray(),
+      collections.payments.find({ userId }).toArray(),
+      collections.expenses.find({ userId }).toArray()
     ]);
 
     const dailyActivity = new Map();

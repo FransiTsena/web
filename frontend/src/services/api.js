@@ -2,21 +2,42 @@ const API_URL = 'http://localhost:5000/api';
 
 const apiFetch = async (endpoint, options = {}) => {
   const url = `${API_URL}${endpoint}`;
+  
+  // Get token from localStorage
+  const token = localStorage.getItem('token');
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   });
   
   if (!response.ok) {
+    // If unauthorized or forbidden, clear token and redirect unless it's the login route
+    if ((response.status === 401 || response.status === 403) && !endpoint.includes('/auth/login')) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     throw new Error(error.error || `HTTP error! status: ${response.status}`);
   }
   
   const data = await response.json();
   return { data }; // Wrap in data property to maintain compatibility with existing axios-based code
+};
+
+export const authService = {
+  login: (credentials) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
+  register: (userData) => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  getProfile: () => apiFetch('/auth/profile'),
 };
 
 export const clientService = {

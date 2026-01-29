@@ -2,30 +2,31 @@ const { ObjectId } = require('mongodb');
 const { collections } = require('../db');
 
 const clientService = {
-  getAll: async () => {
-    return await collections.clients.find({}).toArray();
+  getAll: async (userId) => {
+    return await collections.clients.find({ userId }).toArray();
   },
 
-  getById: async (id) => {
-    return await collections.clients.findOne({ _id: new ObjectId(id) });
+  getById: async (id, userId) => {
+    return await collections.clients.findOne({ _id: new ObjectId(id), userId });
   },
 
-  create: async (data) => {
-    const result = await collections.clients.insertOne(data);
-    return { id: result.insertedId, ...data };
+  create: async (data, userId) => {
+    const document = { ...data, userId, createdAt: new Date() };
+    const result = await collections.clients.insertOne(document);
+    return { id: result.insertedId, ...document };
   },
 
-  update: async (id, data) => {
+  update: async (id, data, userId) => {
     delete data._id;
     const result = await collections.clients.updateOne(
-      { _id: new ObjectId(id) },
+      { _id: new ObjectId(id), userId },
       { $set: { ...data, updatedAt: new Date() } }
     );
     return result.matchedCount > 0;
   },
 
-  delete: async (id) => {
-    const result = await collections.clients.deleteOne({ _id: new ObjectId(id) });
+  delete: async (id, userId) => {
+    const result = await collections.clients.deleteOne({ _id: new ObjectId(id), userId });
     return result.deletedCount > 0;
   }
 };

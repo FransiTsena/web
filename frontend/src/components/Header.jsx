@@ -98,7 +98,7 @@ const Header = ({ user }) => {
 
       {/* Profile and Quick Stats Section */}
       <div className="profile-stats-row">
-        <div className="glass-card profile-card">
+        <div className="glass-card profile-card" style={{ position: 'relative' }}>
           <div style={{ 
             width: '80px', 
             height: '80px', 
@@ -111,7 +111,7 @@ const Header = ({ user }) => {
           }}>
             <Activity size={40} color="black" />
           </div>
-          <div>
+          <div style={{ flex: 1 }}>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Welcome back,</p>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0 }}>{user?.name || 'Freelancer'}</h2>
           </div>

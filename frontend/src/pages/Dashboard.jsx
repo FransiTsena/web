@@ -233,7 +233,7 @@ const ProjectTimelineMonth = ({ month, weeks, items }) => (
           {item.type === 'project' && (
             <div style={{ marginTop: '0.5rem', backgroundColor: '#e2e4e1', height: '40px', borderRadius: '20px', display: 'flex', alignItems: 'center', padding: '0 1rem', justifyContent: 'space-between' }}>
                <div style={{ width: '30%', height: '8px', backgroundColor: item.status === 'high' ? 'black' : 'white', borderRadius: '4px' }}></div>
-               <span style={{ color: (item.trend || '').startsWith('+') ? 'red' : 'green', fontWeight: 'bold' }}>{item.trend}*</span>
+               <span style={{ color: (item.trend || '').startsWith('+') ? 'red' : 'green', fontWeight: 'bold' }}>{item.trend}</span>
             </div>
           )}
         </div>

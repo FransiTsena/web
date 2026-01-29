@@ -20,6 +20,15 @@ async function connectToDatabase() {
     collections.invoices = db.collection('invoices');
     collections.payments = db.collection('payments');
     collections.expenses = db.collection('expenses');
+    collections.users = db.collection('users');
+
+    // Create indexes for multitenancy
+    await collections.clients.createIndex({ userId: 1 });
+    await collections.projects.createIndex({ userId: 1 });
+    await collections.invoices.createIndex({ userId: 1 });
+    await collections.payments.createIndex({ userId: 1 });
+    await collections.expenses.createIndex({ userId: 1 });
+    await collections.users.createIndex({ email: 1 }, { unique: true });
 
     return collections;
   } catch (error) {
