@@ -93,6 +93,7 @@ export const aiService = {
 
 export const contributionService = {
   getForYear: (year) => apiFetch(`/contributions/${year}`),
+  getTrailing: () => apiFetch('/contributions/trailing'),
 };
 
 export default { clientService, projectService, invoiceService, paymentService, expenseService, aiService, contributionService };

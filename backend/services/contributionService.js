@@ -1,7 +1,7 @@
 const { collections } = require('../db');
 
 const contributionService = {
-  getYearlyContributions: async (year, userId) => {
+  getContributions: async (userId, year = null) => {
     // Fetch real data from the database
     const [invoices, payments, expenses] = await Promise.all([
       collections.invoices.find({ userId }).toArray(),
@@ -10,12 +10,26 @@ const contributionService = {
     ]);
 
     const dailyActivity = new Map();
-    const startDate = new Date(year, 0, 1);
-    const endDate = new Date(year, 11, 31);
+    let startDate, endDate;
 
-    // Initialize all days
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      const dateStr = new Date(d).toISOString().split('T')[0];
+    if (year && !isNaN(year)) {
+      startDate = new Date(Date.UTC(year, 0, 1));
+      endDate = new Date(Date.UTC(year, 11, 31));
+    } else {
+      // Default to trailing 12 months (Today backwards)
+      // Use UTC midnight for today to avoid timezone shifting
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      endDate = new Date(todayStr + 'T00:00:00Z');
+
+      startDate = new Date(endDate);
+      startDate.setUTCFullYear(endDate.getUTCFullYear() - 1);
+      startDate.setUTCDate(startDate.getUTCDate() + 1);
+    }
+
+    // Initialize all days in range using UTC
+    for (let d = new Date(startDate); d <= endDate; d.setUTCDate(d.getUTCDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
       dailyActivity.set(dateStr, 0);
     }
 
@@ -23,9 +37,10 @@ const contributionService = {
     const addActivity = (items, dateField) => {
       items.forEach(item => {
         if (item[dateField]) {
-          const date = new Date(item[dateField]);
-          if (date.getFullYear() === year) {
-            const dateStr = date.toISOString().split('T')[0];
+          // DB dates are "YYYY-MM-DD", new Date("YYYY-MM-DD") creates UTC midnight
+          const itemDate = new Date(item[dateField]);
+          if (itemDate >= startDate && itemDate <= endDate) {
+            const dateStr = itemDate.toISOString().split('T')[0];
             if (dailyActivity.has(dateStr)) {
               dailyActivity.set(dateStr, dailyActivity.get(dateStr) + 1);
             }

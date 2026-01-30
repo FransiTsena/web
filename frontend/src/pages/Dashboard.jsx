@@ -18,7 +18,7 @@ const Dashboard = ({ user }) => {
     const fetchData = async () => {
       try {
         const [contr, clients, projects, invoices, expenses] = await Promise.all([
-          contributionService.getForYear(new Date().getFullYear()),
+          contributionService.getTrailing(),
           clientService.getAll(),
           projectService.getAll(),
           invoiceService.getAll(),
@@ -88,9 +88,9 @@ const Dashboard = ({ user }) => {
           <div className="glass-card" style={{ overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ margin: 0 }}>Contribution Activity</h3>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Year {new Date().getFullYear()}</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Last 12 Months</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(53, 1fr)', gap: '4px', overflowX: 'auto', paddingBottom: '1rem', cursor: 'grab' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(53, 1fr)', gap: '4px', overflowX: 'auto', paddingBottom: '1rem', cursor: 'default' }}>
               {contributions.length > 0 ? contributions.map((day, idx) => (
                 <div
                   key={idx}

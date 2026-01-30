@@ -215,10 +215,13 @@ const requestHandler = async (req, res) => {
 
             // Contribution Routes
             else if (resource === 'contributions') {
-                if (method === 'GET' && id) {
-                    const year = parseInt(id);
-                    if (isNaN(year)) return sendJsonResponse(res, 400, { error: 'Invalid year' });
-                    const contributions = await contributionService.getYearlyContributions(year, req.user.userId);
+                if (method === 'GET') {
+                    const yearInput = id;
+                    let year = null;
+                    if (yearInput && yearInput !== 'trailing') {
+                        year = parseInt(yearInput);
+                    }
+                    const contributions = await contributionService.getContributions(req.user.userId, year);
                     sendJsonResponse(res, 200, contributions);
                 }
             }

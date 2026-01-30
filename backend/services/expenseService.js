@@ -1,5 +1,5 @@
-const { ObjectId } = require('mongodb');
 const { collections } = require('../db');
+const ExpenseModel = require('../models/Expense');
 
 const expenseService = {
   getAll: async (userId) => {
@@ -7,37 +7,36 @@ const expenseService = {
   },
 
   getById: async (id, userId) => {
-    if (!id || !ObjectId.isValid(id)) return null;
-    return await collections.expenses.findOne({ _id: new ObjectId(id), userId });
+    const _id = ExpenseModel.toId(id);
+    if (!_id) return null;
+    return await collections.expenses.findOne({ _id, userId });
   },
 
   create: async (data, userId) => {
-    const document = {
-      ...data,
-      amount: parseFloat(data.amount) || 0,
-      userId,
-      createdAt: new Date()
-    };
+    const document = ExpenseModel.fromRequest(data, userId);
     const result = await collections.expenses.insertOne(document);
     return { id: result.insertedId, ...document };
   },
 
   update: async (id, data, userId) => {
-    if (!id || !ObjectId.isValid(id)) return false;
+    const _id = ExpenseModel.toId(id);
+    if (!_id) return false;
+
     delete data._id;
-    if (data.amount !== undefined) {
-      data.amount = parseFloat(data.amount) || 0;
-    }
+    const document = ExpenseModel.fromRequest(data, userId);
+    delete document.createdAt;
+
     const result = await collections.expenses.updateOne(
-      { _id: new ObjectId(id), userId },
-      { $set: { ...data, updatedAt: new Date() } }
+      { _id, userId },
+      { $set: document }
     );
     return result.matchedCount > 0;
   },
 
   delete: async (id, userId) => {
-    if (!id || !ObjectId.isValid(id)) return false;
-    const result = await collections.expenses.deleteOne({ _id: new ObjectId(id), userId });
+    const _id = ExpenseModel.toId(id);
+    if (!_id) return false;
+    const result = await collections.expenses.deleteOne({ _id, userId });
     return result.deletedCount > 0;
   }
 };
