@@ -1,7 +1,10 @@
 const aiActionService = require('./aiActionService');
+require('dotenv').config();
 
-// This assumes Ollama or a similar local provider is running at this endpoint
-const OLLAMA_API = 'http://localhost:11434/api/generate';
+// Configuration for Local AI
+const HOST_ADDRESS = process.env.HOST_ADDRESS || 'http://127.0.0.1:11434';
+const AI_MODEL = process.env.AI_MODEL || 'mistral';
+const HOST_API = `${HOST_ADDRESS}/api/generate`;
 
 const aiChatService = {
   processChat: async (message, history = [], userId) => {
@@ -36,17 +39,30 @@ const aiChatService = {
     `;
 
     try {
-      const response = await fetch(OLLAMA_API, {
+      console.log(`Sending request to Ollama (${AI_MODEL}) at ${HOST_API}...`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (better for cold starts)
+
+      const response = await fetch(HOST_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'mistral',
+          model: AI_MODEL,
           prompt: `${systemPrompt}\nUser: ${message}\nAssistant:`,
           stream: false
-        })
+        }),
+        signal: controller.signal
       });
 
-      if (!response.ok) throw new Error(`Ollama responded with ${response.status}`);
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Model '${AI_MODEL}' not found. Please run 'ollama pull ${AI_MODEL}'`);
+        }
+        throw new Error(`Ollama responded with ${response.status}`);
+      }
+
       const data = await response.json();
 
       return {
@@ -54,9 +70,14 @@ const aiChatService = {
       };
     } catch (error) {
       console.error('AI Service Error:', error.message);
-      // Fallback/Simulated response if Ollama isn't running
+
+      let action = "";
+      if (context.clients.length > 0) {
+        action = `<action>{"type": "PROPOSE_CREATE_PROJECT", "data": {"name": "New Project", "clientId": "${context.clients[0].id}"}, "summary": "Create Project: New Project"}</action>`;
+      }
+
       return {
-        text: `(Local AI Simulation) I've analyzed your request: "${message}". It looks like you want to perform an action. Since I'm in simulation mode, I've prepared a suggestion for you. <action>{"type": "PROPOSE_CREATE_PROJECT", "data": {"name": "New AI Project", "clientId": "${context.clients[0]?.id || ''}"}, "summary": "Create Project: New AI Project"}</action>`,
+        text: `(AI Unavailable) I couldn't reach your local Mistral model. \n\n**Error:** ${error.message}\n**Suggested Fix:** Please ensure Ollama is running and you have the model installed with \`ollama pull mistral\`. I'm using ${HOST_ADDRESS}.`,
       };
     }
   }

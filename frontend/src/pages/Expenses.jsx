@@ -85,21 +85,21 @@ const Expenses = () => {
   };
 
   const getCategoryIcon = (category) => {
-     switch(category?.toLowerCase()) {
-        case 'software': return <ShoppingCart size={18} />;
-        case 'travel': return <Truck size={18} />;
-        case 'office': return <Home size={18} />;
-        case 'food': return <Coffee size={18} />;
-        default: return <Tag size={18} />;
-     }
+    switch (category?.toLowerCase()) {
+      case 'software': return <ShoppingCart size={18} />;
+      case 'travel': return <Truck size={18} />;
+      case 'office': return <Home size={18} />;
+      case 'food': return <Coffee size={18} />;
+      default: return <Tag size={18} />;
+    }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div className="page-header">
         <h2 style={{ fontSize: '1.8rem' }}>Expenses</h2>
-        <button 
-          className="pill-button active" 
+        <button
+          className="pill-button active"
           style={{ backgroundColor: 'var(--text-primary)', color: 'white' }}
           onClick={() => setIsModalOpen(true)}
         >
@@ -109,45 +109,45 @@ const Expenses = () => {
       </div>
 
       <div className="responsive-grid">
-         {loading ? (
-            <p>Loading...</p>
-         ) : expenses.length > 0 ? (
-            expenses.map(expense => (
-               <div key={expense._id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                     <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-                        {getCategoryIcon(expense.category)}
-                     </div>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                        <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>${expense.amount?.toFixed(2)}</span>
-                        <Pencil 
-                          size={18} 
-                          style={{ color: 'var(--text-secondary)', cursor: 'pointer' }}
-                          onClick={() => handleEdit(expense)}
-                        />
-                        <Trash2 
-                          size={18} 
-                          style={{ color: '#ff4d4d', cursor: 'pointer' }}
-                          onClick={() => handleDelete(expense._id)}
-                        />
-                     </div>
-                  </div>
-                  <div>
-                     <h4 style={{ margin: 0 }}>{expense.description}</h4>
-                     <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{expense.category || 'General'}</p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: 'auto' }}>
-                     <Calendar size={14} />
-                     <span>{new Date(expense.date).toLocaleDateString()}</span>
-                  </div>
-               </div>
-            ))
-         ) : (
-            <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
-               <PieChart size={48} color="#eee" style={{ marginBottom: '1rem' }} />
-               <p style={{ color: 'var(--text-secondary)' }}>No expenses tracked. Keep your budget in check by adding your first expense.</p>
+        {loading ? (
+          <p>Loading...</p>
+        ) : expenses.length > 0 ? (
+          expenses.map(expense => (
+            <div key={expense._id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+                  {getCategoryIcon(expense.category)}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Br {expense.amount?.toFixed(2)}</span>
+                  <Pencil
+                    size={18}
+                    style={{ color: 'var(--text-secondary)', cursor: 'pointer' }}
+                    onClick={() => handleEdit(expense)}
+                  />
+                  <Trash2
+                    size={18}
+                    style={{ color: '#ff4d4d', cursor: 'pointer' }}
+                    onClick={() => handleDelete(expense._id)}
+                  />
+                </div>
+              </div>
+              <div>
+                <h4 style={{ margin: 0 }}>{expense.description}</h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{expense.category || 'General'}</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: 'auto' }}>
+                <Calendar size={14} />
+                <span>{new Date(expense.date).toLocaleDateString()}</span>
+              </div>
             </div>
-         )}
+          ))
+        ) : (
+          <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
+            <PieChart size={48} color="#eee" style={{ marginBottom: '1rem' }} />
+            <p style={{ color: 'var(--text-secondary)' }}>No expenses tracked. Keep your budget in check by adding your first expense.</p>
+          </div>
+        )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModal} title={editingExpense ? "Edit Expense" : "Add Expense"}>
@@ -158,14 +158,14 @@ const Expenses = () => {
               value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Amount ($)</label>
+            <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Amount (Br)</label>
             <input required type="number" style={{ padding: '0.8rem', borderRadius: '1rem', border: '1px solid #ddd' }}
               value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Category</label>
             <select style={{ padding: '0.8rem', borderRadius: '1rem', border: '1px solid #ddd' }}
-              value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
+              value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
               <option value="Software">Software</option>
               <option value="Travel">Travel</option>
               <option value="Office">Office</option>

@@ -17,7 +17,7 @@ const Payments = () => {
     invoiceId: invoiceIdParam || '',
     amount: '',
     date: new Date().toISOString().split('T')[0],
-    method: 'Transfer',
+    method: 'Bank Transfer',
     notes: ''
   });
 
@@ -67,7 +67,7 @@ const Payments = () => {
       invoiceId: '',
       amount: '',
       date: new Date().toISOString().split('T')[0],
-      method: 'Transfer',
+      method: 'Bank Transfer',
       notes: ''
     });
   };
@@ -116,8 +116,8 @@ const Payments = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div className="page-header">
         <h2 style={{ fontSize: '1.8rem' }}>Payments</h2>
-        <button 
-          className="pill-button active" 
+        <button
+          className="pill-button active"
           style={{ backgroundColor: 'var(--text-primary)', color: 'white' }}
           onClick={() => setIsModalOpen(true)}
         >
@@ -129,66 +129,66 @@ const Payments = () => {
       <div className="payment-layout">
         {/* Summary Card */}
         <div className="glass-card" style={{ height: 'fit-content' }}>
-           <h3>Summary</h3>
-           <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '1rem' }}>
-                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    <div style={{ backgroundColor: '#e8f5e9', padding: '0.5rem', borderRadius: '50%', color: '#4caf50' }}>
-                       <ArrowDownRight size={20} />
-                    </div>
-                    <span>Total Received</span>
-                 </div>
-                 <span style={{ fontWeight: 'bold' }}>${totalReceived.toLocaleString()}</span>
+          <h3>Summary</h3>
+          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <div style={{ backgroundColor: '#e8f5e9', padding: '0.5rem', borderRadius: '50%', color: '#4caf50' }}>
+                  <ArrowDownRight size={20} />
+                </div>
+                <span>Total Received</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '1rem' }}>
-                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    <div style={{ backgroundColor: '#fff3e0', padding: '0.5rem', borderRadius: '50%', color: '#ff9800' }}>
-                       <Clock size={20} />
-                    </div>
-                    <span>Pending Invoices</span>
-                 </div>
-                 <span style={{ fontWeight: 'bold' }}>${Math.max(0, totalPending).toLocaleString()}</span>
+              <span style={{ fontWeight: 'bold' }}>Br {totalReceived.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <div style={{ backgroundColor: '#fff3e0', padding: '0.5rem', borderRadius: '50%', color: '#ff9800' }}>
+                  <Clock size={20} />
+                </div>
+                <span>Pending Invoices</span>
               </div>
-           </div>
+              <span style={{ fontWeight: 'bold' }}>Br {Math.max(0, totalPending).toLocaleString()}</span>
+            </div>
+          </div>
         </div>
 
         {/* Recent Transactions */}
         <div className="glass-card">
-           <h3 style={{ marginBottom: '1rem' }}>Recent Transactions</h3>
-           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {loading ? (
-                <p>Loading...</p>
-              ) : payments.length > 0 ? (
-                payments.map(payment => (
-                  <div key={payment._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', borderBottom: '1px solid #f5f5f5' }}>
-                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div style={{ width: '45px', height: '45px', borderRadius: '50%', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                           <DollarSign size={20} color="#666" />
-                        </div>
-                        <div>
-                           <p style={{ margin: 0, fontWeight: '600' }}>{getInvoiceNumber(payment.invoiceId)}</p>
-                           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{new Date(payment.date).toLocaleDateString()} • {payment.method}</p>
-                        </div>
-                     </div>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                        <span style={{ fontWeight: 'bold', color: '#4caf50', fontSize: '1.1rem' }}>+${payment.amount?.toLocaleString()}</span>
-                        <Pencil 
-                          size={18} 
-                          style={{ color: 'var(--text-secondary)', cursor: 'pointer' }}
-                          onClick={() => handleEdit(payment)}
-                        />
-                        <Trash2 
-                          size={18} 
-                          style={{ color: '#ff4d4d', cursor: 'pointer' }}
-                          onClick={() => handleDelete(payment._id)}
-                        />
-                     </div>
+          <h3 style={{ marginBottom: '1rem' }}>Recent Transactions</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {loading ? (
+              <p>Loading...</p>
+            ) : payments.length > 0 ? (
+              payments.map(payment => (
+                <div key={payment._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', borderBottom: '1px solid #f5f5f5' }}>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '50%', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <DollarSign size={20} color="#666" />
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: '600' }}>{getInvoiceNumber(payment.invoiceId)}</p>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{new Date(payment.date).toLocaleDateString()} • {payment.method}</p>
+                    </div>
                   </div>
-                ))
-              ) : (
-                <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>No payment history recorded.</p>
-              )}
-           </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                    <span style={{ fontWeight: 'bold', color: '#4caf50', fontSize: '1.1rem' }}>+Br {payment.amount?.toLocaleString()}</span>
+                    <Pencil
+                      size={18}
+                      style={{ color: 'var(--text-secondary)', cursor: 'pointer' }}
+                      onClick={() => handleEdit(payment)}
+                    />
+                    <Trash2
+                      size={18}
+                      style={{ color: '#ff4d4d', cursor: 'pointer' }}
+                      onClick={() => handleDelete(payment._id)}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>No payment history recorded.</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -201,19 +201,19 @@ const Payments = () => {
                 const invId = e.target.value;
                 const inv = invoices.find(i => i._id === invId);
                 setFormData({
-                  ...formData, 
+                  ...formData,
                   invoiceId: invId,
                   amount: inv ? inv.total : formData.amount
                 });
               }}>
               <option value="">Select Invoice</option>
               {invoices.filter(i => i.status !== 'Paid' || i._id === formData.invoiceId).map(i => (
-                <option key={i._id} value={i._id}>{i.invoiceNumber} - ${i.total?.toLocaleString()}</option>
+                <option key={i._id} value={i._id}>{i.invoiceNumber} - Br {i.total?.toLocaleString()}</option>
               ))}
             </select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Amount ($)</label>
+            <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Amount (Br)</label>
             <input required type="number" style={{ padding: '0.8rem', borderRadius: '1rem', border: '1px solid #ddd' }}
               value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
           </div>
@@ -225,11 +225,9 @@ const Payments = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Method</label>
             <select style={{ padding: '0.8rem', borderRadius: '1rem', border: '1px solid #ddd' }}
-              value={formData.method} onChange={(e) => setFormData({...formData, method: e.target.value})}>
-              <option value="Transfer">Bank Transfer</option>
-              <option value="PayPal">PayPal</option>
-              <option value="Stripe">Stripe</option>
-              <option value="Cash">Cash</option>
+              value={formData.method} onChange={(e) => setFormData({ ...formData, method: e.target.value })}>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Telebirr">Telebirr</option>
             </select>
           </div>
           <button type="submit" className="pill-button active" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>

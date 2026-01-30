@@ -26,6 +26,7 @@ const Invoices = () => {
     issueDate: new Date().toISOString().split('T')[0],
     dueDate: '',
     status: 'Pending',
+    taxRate: 0,
     items: [{ description: 'Main Service', quantity: 1, price: 0 }]
   });
 
@@ -79,6 +80,7 @@ const Invoices = () => {
       issueDate: invoice.issueDate ? invoice.issueDate.split('T')[0] : '',
       dueDate: invoice.dueDate ? invoice.dueDate.split('T')[0] : '',
       status: invoice.status || 'Pending',
+      taxRate: invoice.taxRate || 0,
       items: invoice.items || [{ description: 'Main Service', quantity: 1, price: 0 }]
     });
     setIsModalOpen(true);
@@ -94,6 +96,7 @@ const Invoices = () => {
       issueDate: new Date().toISOString().split('T')[0],
       dueDate: '',
       status: 'Pending',
+      taxRate: 0,
       items: [{ description: 'Main Service', quantity: 1, price: 0 }]
     });
   };
@@ -107,11 +110,17 @@ const Invoices = () => {
         price: parseFloat(item.price) || 0
       }));
 
-      const total = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+      const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+      const taxRate = parseFloat(formData.taxRate) || 0;
+      const taxAmount = subtotal * (taxRate / 100);
+      const total = subtotal + taxAmount;
 
       const formattedData = {
         ...formData,
         items,
+        taxRate,
+        subtotal,
+        taxAmount,
         total
       };
 
@@ -164,15 +173,15 @@ const Invoices = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <h2 style={{ fontSize: '1.8rem' }}>Invoices</h2>
           {clientIdFilter && (
-            <div 
+            <div
               onClick={() => setSearchParams({})}
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.5rem', 
-                backgroundColor: '#eee', 
-                padding: '0.25rem 0.75rem', 
-                borderRadius: '1rem', 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                backgroundColor: '#eee',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '1rem',
                 fontSize: '0.8rem',
                 cursor: 'pointer'
               }}
@@ -182,8 +191,8 @@ const Invoices = () => {
             </div>
           )}
         </div>
-        <button 
-          className="pill-button active" 
+        <button
+          className="pill-button active"
           style={{ backgroundColor: 'var(--text-primary)', color: 'white' }}
           onClick={() => setIsModalOpen(true)}
         >
@@ -213,12 +222,12 @@ const Invoices = () => {
                   <td style={{ padding: '1.25rem', fontWeight: '500' }}>{invoice.invoiceNumber || 'INV-001'}</td>
                   <td style={{ padding: '1.25rem' }}>{getClientName(invoice.clientId)}</td>
                   <td style={{ padding: '1.25rem' }}>{new Date(invoice.issueDate).toLocaleDateString()}</td>
-                  <td style={{ padding: '1.25rem', fontWeight: 'bold' }}>${invoice.total?.toFixed(2) || '0.00'}</td>
+                  <td style={{ padding: '1.25rem', fontWeight: 'bold' }}>Br {invoice.total?.toFixed(2) || '0.00'}</td>
                   <td style={{ padding: '1.25rem' }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.4rem', 
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
                       fontSize: '0.8rem',
                       color: invoice.status === 'Paid' ? '#4CAF50' : '#FF9800'
                     }}>
@@ -228,35 +237,35 @@ const Invoices = () => {
                   </td>
                   <td style={{ padding: '1.25rem' }}>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
-                      <button 
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }} 
+                      <button
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
                         title="View Details"
                         onClick={() => {
                           setSelectedInvoice(invoice);
                           setIsDetailModalOpen(true);
                         }}
                       >
-                         <Eye size={18} />
+                        <Eye size={18} />
                       </button>
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Download PDF"><Download size={18} /></button>
-                      <button 
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }} 
+                      <button
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
                         title="Edit Invoice"
                         onClick={() => handleEdit(invoice)}
                       >
                         <Pencil size={18} />
                       </button>
                       {invoice.status !== 'Paid' && (
-                        <button 
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4CAF50' }} 
+                        <button
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4CAF50' }}
                           title="Record Payment"
                           onClick={() => navigate(`/payments?invoiceId=${invoice._id}`)}
                         >
                           <DollarSign size={18} />
                         </button>
                       )}
-                      <Trash2 
-                        size={18} 
+                      <Trash2
+                        size={18}
                         style={{ color: '#ff4d4d', cursor: 'pointer' }}
                         onClick={() => handleDelete(invoice._id)}
                       />
@@ -277,22 +286,25 @@ const Invoices = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <label style={{ fontSize: '0.85rem' }}>Invoice #</label>
               <input placeholder="INV-001" style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-                value={formData.invoiceNumber} onChange={(e) => setFormData({...formData, invoiceNumber: e.target.value})} />
+                value={formData.invoiceNumber} onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem' }}>Status</label>
-                <select style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-                  value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}>
-                    <option value="Pending">Pending</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Overdue">Overdue</option>
-                </select>
-            </div>
-          </div>
+              <label style={{ fontSize: '0.85rem' }}>Status</label>
+              <select style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
+                value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                <option value="Pending">Pending</option>
+                <option value="Paid">Paid</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </div>            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem' }}>Tax Rate (%)</label>
+              <input type="number" step="0.01" placeholder="0" style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
+                value={formData.taxRate} onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })} />
+            </div>          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             <label style={{ fontSize: '0.85rem' }}>Client</label>
             <select required style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-              value={formData.clientId} onChange={(e) => setFormData({...formData, clientId: e.target.value})}>
+              value={formData.clientId} onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}>
               <option value="">Select a client</option>
               {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
@@ -300,7 +312,7 @@ const Invoices = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             <label style={{ fontSize: '0.85rem' }}>Project (Optional)</label>
             <select style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-              value={formData.projectId} onChange={(e) => setFormData({...formData, projectId: e.target.value})}>
+              value={formData.projectId} onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}>
               <option value="">Select a project</option>
               {projects.filter(p => !formData.clientId || p.clientId === formData.clientId).map(p => (
                 <option key={p._id} value={p._id}>{p.name}</option>
@@ -311,12 +323,12 @@ const Invoices = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <label style={{ fontSize: '0.85rem' }}>Issue Date</label>
               <input type="date" style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-                value={formData.issueDate} onChange={(e) => setFormData({...formData, issueDate: e.target.value})} />
+                value={formData.issueDate} onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <label style={{ fontSize: '0.85rem' }}>Due Date</label>
               <input type="date" style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-                value={formData.dueDate} onChange={(e) => setFormData({...formData, dueDate: e.target.value})} />
+                value={formData.dueDate} onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })} />
             </div>
           </div>
           <div style={{ borderTop: '1px solid #eee', marginTop: '0.5rem', paddingTop: '1rem' }}>
@@ -327,35 +339,45 @@ const Invoices = () => {
                   onChange={(e) => {
                     const newItems = [...formData.items];
                     newItems[index].description = e.target.value;
-                    setFormData({...formData, items: newItems});
+                    setFormData({ ...formData, items: newItems });
                   }} />
                 <div className="form-row">
                   <input type="number" placeholder="Qty" style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #ddd' }} value={item.quantity}
                     onChange={(e) => {
                       const newItems = [...formData.items];
                       newItems[index].quantity = e.target.value;
-                      setFormData({...formData, items: newItems});
+                      setFormData({ ...formData, items: newItems });
                     }} />
                   <input type="number" placeholder="Price" style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #ddd' }} value={item.price}
                     onChange={(e) => {
                       const newItems = [...formData.items];
                       newItems[index].price = e.target.value;
-                      setFormData({...formData, items: newItems});
+                      setFormData({ ...formData, items: newItems });
                     }} />
                 </div>
               </div>
             ))}
-            <button type="button" 
+            <button type="button"
               style={{ fontSize: '0.75rem', color: 'blue', background: 'none', border: 'none', cursor: 'pointer' }}
-              onClick={() => setFormData({...formData, items: [...formData.items, { description: '', quantity: 1, price: 0 }]})}
+              onClick={() => setFormData({ ...formData, items: [...formData.items, { description: '', quantity: 1, price: 0 }] })}
             > + Add another item </button>
           </div>
-          
-          <div style={{ marginTop: '1rem', padding: '1rem', borderTop: '2px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 'bold' }}>Invoice Total:</span>
-            <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>
-              ${formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0).toFixed(2)}
-            </span>
+
+          <div style={{ marginTop: '1rem', padding: '1rem', borderTop: '2px dashed #eee', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+              <span>Subtotal:</span>
+              <span>Br {formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0).toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+              <span>Tax ({formData.taxRate || 0}%):</span>
+              <span>Br {(formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0) * (parseFloat(formData.taxRate || 0) / 100)).toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #eee' }}>
+              <span style={{ fontWeight: 'bold' }}>Grand Total:</span>
+              <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>
+                Br {(formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0) * (1 + parseFloat(formData.taxRate || 0) / 100)).toFixed(2)}
+              </span>
+            </div>
           </div>
 
           <button type="submit" className="pill-button active" style={{ marginTop: '0.5rem', justifyContent: 'center' }}>
@@ -365,9 +387,9 @@ const Invoices = () => {
       </Modal>
 
       {/* Invoice Detail Modal */}
-      <Modal 
-        isOpen={isDetailModalOpen} 
-        onClose={() => setIsDetailModalOpen(false)} 
+      <Modal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
         title={`Invoice: ${selectedInvoice?.invoiceNumber}`}
         maxWidth="800px"
       >
@@ -379,9 +401,9 @@ const Invoices = () => {
               <p style={{ margin: 0, fontSize: '0.9rem' }}>Project: {projects.find(p => p._id === selectedInvoice?.projectId)?.name || 'General'}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ 
-                padding: '0.4rem 1rem', 
-                borderRadius: '2rem', 
+              <div style={{
+                padding: '0.4rem 1rem',
+                borderRadius: '2rem',
                 backgroundColor: selectedInvoice?.status === 'Paid' ? '#e8f5e9' : '#fff3e0',
                 color: selectedInvoice?.status === 'Paid' ? '#4CAF50' : '#ff9800',
                 display: 'inline-block',
@@ -410,16 +432,28 @@ const Invoices = () => {
                   <tr key={i} style={{ borderTop: '1px solid #eee' }}>
                     <td style={{ padding: '1rem' }}>{item.description}</td>
                     <td style={{ padding: '1rem', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>${item.price?.toFixed(2)}</td>
-                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '500' }}>${(item.quantity * item.price).toFixed(2)}</td>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>Br {item.price?.toFixed(2)}</td>
+                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '500' }}>Br {(item.quantity * item.price).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot style={{ borderTop: '2px solid #eee' }}>
+                {selectedInvoice?.taxRate > 0 && (
+                  <>
+                    <tr>
+                      <td colSpan="3" style={{ padding: '0.5rem 1rem', textAlign: 'right', color: 'var(--text-secondary)' }}>Subtotal</td>
+                      <td style={{ padding: '0.5rem 1rem', textAlign: 'right' }}>Br {selectedInvoice?.subtotal?.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="3" style={{ padding: '0.5rem 1rem', textAlign: 'right', color: 'var(--text-secondary)' }}>Tax ({selectedInvoice?.taxRate}%)</td>
+                      <td style={{ padding: '0.5rem 1rem', textAlign: 'right' }}>Br {selectedInvoice?.taxAmount?.toFixed(2)}</td>
+                    </tr>
+                  </>
+                )}
                 <tr>
                   <td colSpan="3" style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Grand Total</td>
                   <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--accent-color)' }}>
-                    ${selectedInvoice?.total?.toFixed(2)}
+                    Br {selectedInvoice?.total?.toFixed(2)}
                   </td>
                 </tr>
               </tfoot>
@@ -427,55 +461,55 @@ const Invoices = () => {
           </div>
 
           <div>
-             <h4 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-               <DollarSign size={18} color="var(--accent-color)" />
-               Payment History
-             </h4>
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-               {payments.filter(p => p.invoiceId === selectedInvoice?._id).length > 0 ? (
-                 payments.filter(p => p.invoiceId === selectedInvoice?._id).map(p => (
-                   <div key={p._id} className="glass-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', backgroundColor: '#f9f9f9', border: 'none' }}>
-                     <div>
-                       <p style={{ margin: 0, fontWeight: 'bold' }}>{p.method} Payment</p>
-                       <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(p.date).toLocaleDateString()}</p>
-                     </div>
-                     <strong style={{ color: '#4CAF50' }}>+${p.amount?.toLocaleString()}</strong>
-                   </div>
-                 ))
-               ) : (
-                 <div style={{ textAlign: 'center', padding: '1.5rem', backgroundColor: '#f9f9f9', borderRadius: '1rem' }}>
-                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No payments recorded for this invoice yet.</p>
-                    {selectedInvoice?.status !== 'Paid' && (
-                      <button 
-                        className="pill-button" 
-                        style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}
-                        onClick={() => navigate(`/payments?invoiceId=${selectedInvoice?._id}`)}
-                      >
-                        Record first payment
-                      </button>
-                    )}
-                 </div>
-               )}
-             </div>
+            <h4 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <DollarSign size={18} color="var(--accent-color)" />
+              Payment History
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {payments.filter(p => p.invoiceId === selectedInvoice?._id).length > 0 ? (
+                payments.filter(p => p.invoiceId === selectedInvoice?._id).map(p => (
+                  <div key={p._id} className="glass-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', backgroundColor: '#f9f9f9', border: 'none' }}>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 'bold' }}>{p.method} Payment</p>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(p.date).toLocaleDateString()}</p>
+                    </div>
+                    <strong style={{ color: '#4CAF50' }}>+Br {p.amount?.toLocaleString()}</strong>
+                  </div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '1.5rem', backgroundColor: '#f9f9f9', borderRadius: '1rem' }}>
+                  <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No payments recorded for this invoice yet.</p>
+                  {selectedInvoice?.status !== 'Paid' && (
+                    <button
+                      className="pill-button"
+                      style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}
+                      onClick={() => navigate(`/payments?invoiceId=${selectedInvoice?._id}`)}
+                    >
+                      Record first payment
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderTop: '1px solid #eee', paddingTop: '1.5rem' }}>
-             <button className="pill-button" onClick={() => setIsDetailModalOpen(false)}>Close</button>
-             {selectedInvoice?.status !== 'Paid' && (
-                <button 
-                  className="pill-button active" 
-                  style={{ backgroundColor: '#4CAF50' }}
-                  onClick={() => handleMarkAsPaid(selectedInvoice._id)}
-                >
-                  Mark as Paid
-                </button>
-             )}
-             <button className="pill-button active" onClick={() => {
-               handleEdit(selectedInvoice);
-               setIsDetailModalOpen(false);
-             }}>
-               Edit Invoice
-             </button>
+            <button className="pill-button" onClick={() => setIsDetailModalOpen(false)}>Close</button>
+            {selectedInvoice?.status !== 'Paid' && (
+              <button
+                className="pill-button active"
+                style={{ backgroundColor: '#4CAF50' }}
+                onClick={() => handleMarkAsPaid(selectedInvoice._id)}
+              >
+                Mark as Paid
+              </button>
+            )}
+            <button className="pill-button active" onClick={() => {
+              handleEdit(selectedInvoice);
+              setIsDetailModalOpen(false);
+            }}>
+              Edit Invoice
+            </button>
           </div>
         </div>
       </Modal>

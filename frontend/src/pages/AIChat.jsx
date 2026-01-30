@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { aiService } from '../services/api';
 import { Send, User, Bot, Check, X, Zap, Loader2 } from 'lucide-react';
+import '../styles/pages/ai-chat.css';
 
 const AIChat = () => {
   const [messages, setMessages] = useState([
@@ -43,12 +44,12 @@ const AIChat = () => {
       // Logic mapping "PROPOSE_CREATE_PROJECT" to actual backend "CREATE_PROJECT"
       const actualType = action.type.replace('PROPOSE_', '');
       await aiService.execute(actualType, action.data);
-      
+
       // Update message to show it was executed
       const newMessages = [...messages];
       newMessages[index].status = 'executed';
       setMessages(newMessages);
-      
+
       // Add a success follow-up
       setMessages(prev => [...prev, { role: 'assistant', text: `Success! I've created the ${action.data.name || 'item'} for you.` }]);
     } catch (error) {
@@ -59,7 +60,7 @@ const AIChat = () => {
   const parseMessage = (msg, index) => {
     const actionRegex = /<action>([\s\S]*?)<\/action>/;
     const match = msg.text.match(actionRegex);
-    
+
     if (match) {
       const textBefore = msg.text.split('<action>')[0];
       const actionData = JSON.parse(match[1]);
@@ -67,59 +68,30 @@ const AIChat = () => {
       return (
         <>
           <p>{textBefore}</p>
-          <div style={{ 
-            marginTop: '1rem', 
-            background: '#fff', 
-            border: '1px solid #ff7a0033', 
-            borderRadius: '1rem', 
-            padding: '1.25rem',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.8rem', color: '#ff7a00' }}>
+          <div className="proposed-action-card">
+            <div className="proposed-action-header">
               <Zap size={18} />
-              <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Proposed Action</span>
+              <span>Proposed Action</span>
             </div>
-            <h4 style={{ margin: '0 0 0.5rem 0' }}>{actionData.summary}</h4>
-            <pre style={{ fontSize: '0.8rem', background: '#f8f8f8', padding: '0.5rem', borderRadius: '0.5rem', overflowX: 'auto' }}>
+            <h4 className="action-summary">{actionData.summary}</h4>
+            <pre className="action-data-preview">
               {JSON.stringify(actionData.data, null, 2)}
             </pre>
-            
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+
+            <div className="action-buttons">
               {msg.status === 'executed' ? (
-                <div style={{ color: '#2ecc71', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold' }}>
+                <div className="executed-status">
                   <Check size={18} /> Action Executed
                 </div>
               ) : (
                 <>
-                  <button 
+                  <button
                     onClick={() => executeAction(actionData, index)}
-                    style={{ 
-                      flex: 1, 
-                      padding: '0.6rem', 
-                      background: '#ff7a00', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '0.6rem', 
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      fontWeight: 'bold'
-                    }}
+                    className="btn-confirm-execute"
                   >
                     Confirm & Execute
                   </button>
-                  <button 
-                    style={{ 
-                      padding: '0.6rem 1rem', 
-                      background: '#f0f0f0', 
-                      color: '#666', 
-                      border: 'none', 
-                      borderRadius: '0.6rem', 
-                      cursor: 'pointer' 
-                    }}
-                  >
+                  <button className="btn-cancel-action">
                     <X size={18} />
                   </button>
                 </>
@@ -133,57 +105,35 @@ const AIChat = () => {
   };
 
   return (
-    <div style={{ height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div className="ai-chat-container">
       <div className="page-header">
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.8rem' }}>AI Assistant</h2>
-          <span style={{ backgroundColor: '#fff4e5', padding: '0.3rem 0.8rem', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 'bold', color: '#ff7a00' }}>
+        <div className="ai-header-content">
+          <h2 className="ai-header-title">AI Assistant</h2>
+          <span className="accuracy-badge">
             It can be inacurate
           </span>
         </div>
       </div>
 
-      <div className="glass-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
+      <div className="glass-card chat-card">
         {/* Messages Area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="messages-area">
           {messages.map((msg, i) => (
-            <div key={i} style={{ 
-              display: 'flex', 
-              gap: '1rem', 
-              alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              maxWidth: '80%',
-              flexDirection: msg.role === 'user' ? 'row-reverse' : 'row'
-            }}>
-              <div style={{ 
-                width: '40px', 
-                height: '40px', 
-                borderRadius: '50%', 
-                background: msg.role === 'user' ? '#ff7a00' : '#333',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                flexShrink: 0
-              }}>
+            <div key={i} className={`message-wrapper ${msg.role}`}>
+              <div className={`avatar ${msg.role}`}>
                 {msg.role === 'user' ? <User size={20} /> : <Bot size={20} />}
               </div>
-              <div style={{ 
-                background: msg.role === 'user' ? '#fff4e5' : '#f8f8f8',
-                padding: '1rem',
-                borderRadius: msg.role === 'user' ? '1rem 0 1rem 1rem' : '0 1rem 1rem 1rem',
-                border: msg.role === 'user' ? '1px solid #ff7a0022' : '1px solid #eee',
-                lineHeight: '1.5'
-              }}>
+              <div className={`message-bubble ${msg.role}`}>
                 {parseMessage(msg, i)}
               </div>
             </div>
           ))}
           {loading && (
-            <div style={{ display: 'flex', gap: '1rem', alignSelf: 'flex-start' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                 <Bot size={20} />
+            <div className="loading-wrapper">
+              <div className="avatar assistant">
+                <Bot size={20} />
               </div>
-              <div style={{ background: '#f8f8f8', padding: '1rem', borderRadius: '0 1rem 1rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="loading-bubble">
                 <Loader2 size={18} className="spin" />
                 <span>Thinking...</span>
               </div>
@@ -193,37 +143,18 @@ const AIChat = () => {
         </div>
 
         {/* Input Area */}
-        <form onSubmit={handleSend} style={{ padding: '1.5rem', borderTop: '1px solid #eee', display: 'flex', gap: '1rem' }}>
-          <input 
-            type="text" 
-            placeholder="Ask AI to create a project for a client..." 
-            style={{ 
-              flex: 1, 
-              padding: '1rem 1.5rem', 
-              borderRadius: '2rem', 
-              border: '1px solid #ddd', 
-              outline: 'none',
-              fontSize: '1rem'
-            }}
+        <form onSubmit={handleSend} className="chat-input-area">
+          <input
+            type="text"
+            placeholder="Ask AI to create a project for a client..."
+            className="chat-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={!input.trim() || loading}
-            style={{ 
-              width: '50px', 
-              height: '50px', 
-              borderRadius: '50%', 
-              background: '#ff7a00', 
-              color: 'white', 
-              border: 'none', 
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: !input.trim() || loading ? 0.6 : 1
-            }}
+            className="btn-send"
           >
             <Send size={20} />
           </button>
@@ -232,5 +163,6 @@ const AIChat = () => {
     </div>
   );
 };
+
 
 export default AIChat;

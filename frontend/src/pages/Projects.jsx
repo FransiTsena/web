@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { projectService, clientService, invoiceService, paymentService } from '../services/api';
 import { Plus, Briefcase, Calendar, Clock, CheckCircle2, AlertCircle, Trash2, X, FileText, Pencil, DollarSign } from 'lucide-react';
 import Modal from '../components/Modal';
+import '../styles/pages/projects.css';
 
 const Projects = () => {
   const navigate = useNavigate();
@@ -19,12 +20,12 @@ const Projects = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
   const [detailTab, setDetailTab] = useState('overview');
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    clientId: clientIdFilter || '', 
-    description: '', 
-    status: 'Ongoing', 
-    budget: '', 
+  const [formData, setFormData] = useState({
+    name: '',
+    clientId: clientIdFilter || '',
+    description: '',
+    status: 'Ongoing',
+    budget: '',
     startDate: new Date().toISOString().split('T')[0],
     endDate: ''
   });
@@ -76,12 +77,12 @@ const Projects = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingProject(null);
-    setFormData({ 
-      name: '', 
-      clientId: clientIdFilter || '', 
-      description: '', 
-      status: 'Ongoing', 
-      budget: '', 
+    setFormData({
+      name: '',
+      clientId: clientIdFilter || '',
+      description: '',
+      status: 'Ongoing',
+      budget: '',
       startDate: new Date().toISOString().split('T')[0],
       endDate: ''
     });
@@ -136,7 +137,7 @@ const Projects = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status?.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'completed': return '#4CAF50';
       case 'in progress': return '#2196F3';
       case 'ongoing': return '#2196F3';
@@ -151,32 +152,22 @@ const Projects = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="projects-container">
       <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <h2 style={{ fontSize: '1.8rem' }}>Projects</h2>
+        <div className="page-header-title-container">
+          <h2 className="page-header-title">Projects</h2>
           {clientIdFilter && (
-            <div 
+            <div
               onClick={() => setSearchParams({})}
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.5rem', 
-                backgroundColor: '#eee', 
-                padding: '0.25rem 0.75rem', 
-                borderRadius: '1rem', 
-                fontSize: '0.8rem',
-                cursor: 'pointer'
-              }}
+              className="filter-pill"
             >
               <span>Filtering for {getClientName(clientIdFilter)}</span>
               <X size={14} />
             </div>
           )}
         </div>
-        <button 
-          className="pill-button active" 
-          style={{ backgroundColor: 'var(--text-primary)', color: 'white' }}
+        <button
+          className="pill-button active primary-btn"
           onClick={() => setIsModalOpen(true)}
         >
           <Plus size={18} />
@@ -189,122 +180,121 @@ const Projects = () => {
           <p>Loading projects...</p>
         ) : filteredProjects.length > 0 ? (
           filteredProjects.map(project => (
-            <div key={project._id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <h3 style={{ margin: 0 }}>{project.name}</h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                      Client: {getClientName(project.clientId)}
-                    </p>
+            <div key={project._id} className="glass-card project-card">
+              <div className="project-card-header">
+                <div>
+                  <h3 className="project-card-title">{project.name}</h3>
+                  <p className="project-client">
+                    Client: {getClientName(project.clientId)}
+                  </p>
+                </div>
+                <div className="project-status-container">
+                  <div
+                    className="status-badge"
+                    style={{
+                      backgroundColor: `${getStatusColor(project.status)}22`,
+                      color: getStatusColor(project.status)
+                    }}
+                  >
+                    {project.status || 'Ongoing'}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ 
-                      padding: '0.25rem 0.75rem', 
-                      borderRadius: '1rem', 
-                      fontSize: '0.75rem', 
-                      fontWeight: 'bold', 
-                      backgroundColor: `${getStatusColor(project.status)}22`, 
-                      color: getStatusColor(project.status) 
-                    }}>
-                      {project.status || 'Ongoing'}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                      <Pencil 
-                        size={18} 
-                        style={{ color: 'var(--text-secondary)', cursor: 'pointer' }}
-                        onClick={() => handleEdit(project)}
-                      />
-                      <Trash2 
-                        size={18} 
-                        style={{ color: '#ff4d4d', cursor: 'pointer' }}
-                        onClick={() => handleDelete(project._id)}
-                      />
-                    </div>
+                  <div className="action-icons">
+                    <Pencil
+                      size={18}
+                      style={{ color: 'var(--text-secondary)', cursor: 'pointer' }}
+                      onClick={() => handleEdit(project)}
+                    />
+                    <Trash2
+                      size={18}
+                      className="trash-icon"
+                      onClick={() => handleDelete(project._id)}
+                    />
                   </div>
-               </div>
+                </div>
+              </div>
 
-               <p style={{ fontSize: '0.9rem', color: '#555', lineHeight: '1.4' }}>
-                 {project.description || 'No description provided.'}
-               </p>
+              <p className="project-description">
+                {project.description || 'No description provided.'}
+              </p>
 
-               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                     <Calendar size={14} color="var(--text-secondary)" />
-                     <span>{project.startDate ? new Date(project.startDate).toLocaleDateString() : 'No date'}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                     <Clock size={14} color="var(--text-secondary)" />
-                     <span>Deadline: {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'TBD'}</span>
-                  </div>
-               </div>
+              <div className="project-meta-grid">
+                <div className="meta-item">
+                  <Calendar size={14} color="var(--text-secondary)" />
+                  <span>{project.startDate ? new Date(project.startDate).toLocaleDateString() : 'No date'}</span>
+                </div>
+                <div className="meta-item">
+                  <Clock size={14} color="var(--text-secondary)" />
+                  <span>Deadline: {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'TBD'}</span>
+                </div>
+              </div>
 
-               <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>${project.budget?.toLocaleString() || '0.00'}</span>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button 
-                      className="pill-button" 
-                      style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
-                      onClick={() => navigate(`/invoices?clientId=${project.clientId}&projectId=${project._id}`)}
-                    >
-                      Invoices
-                    </button>
-                    <button 
-                      className="pill-button" 
-                      style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
-                      onClick={() => {
-                        setSelectedProject(project);
-                        setIsDetailModalOpen(true);
-                      }}
-                    >
-                      View Details
-                    </button>
-                  </div>
-               </div>
+              <div className="project-footer">
+                <span className="project-budget">Br {project.budget?.toLocaleString() || '0.00'}</span>
+                <div className="project-actions">
+                  <button
+                    className="pill-button"
+                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                    onClick={() => navigate(`/invoices?clientId=${project.clientId}&projectId=${project._id}`)}
+                  >
+                    Invoices
+                  </button>
+                  <button
+                    className="pill-button"
+                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setIsDetailModalOpen(true);
+                    }}
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
             </div>
           ))
         ) : (
-          <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
-             <Briefcase size={48} color="#eee" style={{ marginBottom: '1rem' }} />
-             <p style={{ color: 'var(--text-secondary)' }}>No active projects. Start a new one to track your progress.</p>
+          <div className="glass-card empty-state">
+            <Briefcase size={48} color="#eee" style={{ marginBottom: '1rem' }} />
+            <p style={{ color: 'var(--text-secondary)' }}>No active projects. Start a new one to track your progress.</p>
           </div>
         )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModal} title={editingProject ? "Edit Project" : "Create New Project"}>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <label style={{ fontSize: '0.85rem' }}>Project Name</label>
-            <input required style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }} 
-              value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+        <form onSubmit={handleSubmit} className="form-container">
+          <div className="form-group">
+            <label className="form-label">Project Name</label>
+            <input required className="form-input"
+              value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <label style={{ fontSize: '0.85rem' }}>Client</label>
-            <select required style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-              value={formData.clientId} onChange={(e) => setFormData({...formData, clientId: e.target.value})}>
+          <div className="form-group">
+            <label className="form-label">Client</label>
+            <select required className="form-select"
+              value={formData.clientId} onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}>
               <option value="">Select a client</option>
               {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <label style={{ fontSize: '0.85rem' }}>Budget ($)</label>
-            <input type="number" style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-              value={formData.budget} onChange={(e) => setFormData({...formData, budget: e.target.value})} />
+          <div className="form-group">
+            <label className="form-label">Budget (Br)</label>
+            <input type="number" className="form-input"
+              value={formData.budget} onChange={(e) => setFormData({ ...formData, budget: e.target.value })} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <label style={{ fontSize: '0.85rem' }}>Description</label>
-            <textarea style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd', minHeight: '80px' }}
-              value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea className="form-textarea"
+              value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
           </div>
           <div className="form-row">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label style={{ fontSize: '0.85rem' }}>Start Date</label>
-              <input type="date" style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-                value={formData.startDate} onChange={(e) => setFormData({...formData, startDate: e.target.value})} />
+            <div className="form-group">
+              <label className="form-label">Start Date</label>
+              <input type="date" className="form-input"
+                value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label style={{ fontSize: '0.85rem' }}>Deadline</label>
-              <input type="date" style={{ padding: '0.7rem', borderRadius: '0.8rem', border: '1px solid #ddd' }}
-                value={formData.endDate} onChange={(e) => setFormData({...formData, endDate: e.target.value})} />
+            <div className="form-group">
+              <label className="form-label">Deadline</label>
+              <input type="date" className="form-input"
+                value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
             </div>
           </div>
           <button type="submit" className="pill-button active" style={{ marginTop: '1rem', justifyContent: 'center' }}>
@@ -314,20 +304,19 @@ const Projects = () => {
       </Modal>
 
       {/* Project Details Modal */}
-      <Modal 
-        isOpen={isDetailModalOpen} 
+      <Modal
+        isOpen={isDetailModalOpen}
         onClose={() => {
           setIsDetailModalOpen(false);
           setDetailTab('overview');
-        }} 
+        }}
         title={`Project: ${selectedProject?.name}`}
         maxWidth="900px"
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="detail-container">
           {/* Progress Overview Section */}
           {selectedProject && (() => {
             const projectInvoices = invoices.filter(inv => inv.projectId === selectedProject._id);
-            // const totalInvoiced = projectInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
             const projectPayments = payments.filter(pay => {
               const inv = projectInvoices.find(i => i._id === pay.invoiceId);
               return !!inv;
@@ -338,28 +327,28 @@ const Projects = () => {
             const remaining = budget - totalPaid;
 
             return (
-              <div className="glass-card" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #fff 0%, #fffbf2 100%)', border: '1px solid #ff980033' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Budget Completion (by Payments)</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ flex: 1, height: '8px', backgroundColor: '#eee', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${Math.min(percentPaid, 100)}%`, height: '100%', backgroundColor: 'var(--accent-color)', borderRadius: '4px' }}></div>
+              <div className="glass-card progress-overview">
+                <div className="progress-grid">
+                  <div className="progress-bar-container">
+                    <span className="progress-bar-label">Budget Completion (by Payments)</span>
+                    <div className="progress-bar-wrapper">
+                      <div className="progress-bar-bg">
+                        <div className="progress-bar-fill" style={{ width: `${Math.min(percentPaid, 100)}%` }}></div>
                       </div>
                       <span style={{ fontWeight: 'bold' }}>{percentPaid}%</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-around', gap: '1rem' }}>
-                     <div style={{ textAlign: 'center' }}>
-                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total Paid</p>
-                        <p style={{ margin: '0.2rem 0 0', fontWeight: 'bold', fontSize: '1.2rem', color: '#4CAF50' }}>${totalPaid.toLocaleString()}</p>
-                     </div>
-                     <div style={{ textAlign: 'center' }}>
-                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Remaining</p>
-                        <p style={{ margin: '0.2rem 0 0', fontWeight: 'bold', fontSize: '1.2rem', color: remaining < 0 ? '#f44336' : 'var(--text-primary)' }}>
-                          ${remaining.toLocaleString()}
-                        </p>
-                     </div>
+                  <div className="progress-stats">
+                    <div className="stat-item">
+                      <p className="stat-label">Total Paid</p>
+                      <p className="stat-value" style={{ color: '#4CAF50' }}>Br {totalPaid.toLocaleString()}</p>
+                    </div>
+                    <div className="stat-item">
+                      <p className="stat-label">Remaining</p>
+                      <p className="stat-value" style={{ color: remaining < 0 ? '#f44336' : 'var(--text-primary)' }}>
+                        Br {remaining.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -367,127 +356,95 @@ const Projects = () => {
           })()}
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #eee' }}>
+          <div className="tabs-container">
             {['overview', 'invoices', 'payments'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setDetailTab(tab)}
-                style={{
-                  padding: '0.75rem 1rem',
-                  border: 'none',
-                  background: 'none',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: detailTab === tab ? 'bold' : 'normal',
-                  color: detailTab === tab ? 'var(--accent-color)' : 'var(--text-secondary)',
-                  borderBottom: detailTab === tab ? '2px solid var(--accent-color)' : '2px solid transparent',
-                  textTransform: 'capitalize'
-                }}
+                className={`tab-button ${detailTab === tab ? 'active' : ''}`}
               >
                 {tab}
               </button>
             ))}
           </div>
 
-          <div style={{ maxHeight: '50vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+          <div className="tab-content">
             {detailTab === 'overview' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                   <div>
-                     <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}>Project Description</label>
-                     <p style={{ marginTop: '0.5rem', lineHeight: '1.6' }}>{selectedProject?.description || 'No description provided.'}</p>
-                   </div>
-                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div className="glass-card" style={{ padding: '1rem', backgroundColor: '#fdfdfd' }}>
-                        <Calendar size={16} />
-                        <p style={{ fontSize: '0.75rem', margin: '0.5rem 0 0' }}>Start Date</p>
-                        <p style={{ fontWeight: 'bold', margin: '0.2rem 0 0' }}>{selectedProject?.startDate ? new Date(selectedProject?.startDate).toLocaleDateString() : 'N/A'}</p>
-                      </div>
-                      <div className="glass-card" style={{ padding: '1rem', backgroundColor: '#fdfdfd' }}>
-                        <Clock size={16} />
-                        <p style={{ fontSize: '0.75rem', margin: '0.5rem 0 0' }}>Deadline</p>
-                        <p style={{ fontWeight: 'bold', margin: '0.2rem 0 0' }}>{selectedProject?.endDate ? new Date(selectedProject?.endDate).toLocaleDateString() : 'TBD'}</p>
-                      </div>
-                   </div>
+              <div className="overview-grid">
+                <div className="overview-main">
+                  <div>
+                    <label className="overview-description-label">Project Description</label>
+                    <p className="overview-description-text">{selectedProject?.description || 'No description provided.'}</p>
+                  </div>
+                  <div className="mini-meta-grid">
+                    <div className="glass-card overview-meta-card">
+                      <Calendar size={16} />
+                      <p className="meta-card-label">Start Date</p>
+                      <p className="meta-card-value">{selectedProject?.startDate ? new Date(selectedProject?.startDate).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                    <div className="glass-card overview-meta-card">
+                      <Clock size={16} />
+                      <p className="meta-card-label">Deadline</p>
+                      <p className="meta-card-value">{selectedProject?.endDate ? new Date(selectedProject?.endDate).toLocaleDateString() : 'TBD'}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="glass-card" style={{ padding: '1.5rem', border: 'none', backgroundColor: '#f9f9f9', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                   <h5 style={{ margin: 0 }}>Client Relationship</h5>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: 'bold' }}>
-                        {getClientName(selectedProject?.clientId).charAt(0)}
-                      </div>
-                      <div>
-                        <p style={{ margin: 0, fontWeight: 'bold' }}>{getClientName(selectedProject?.clientId)}</p>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>View Profile</p>
-                      </div>
-                   </div>
-                   <button className="pill-button active" style={{ fontSize: '0.8rem' }} onClick={() => navigate(`/clients?id=${selectedProject?.clientId}`)}>
-                     View Client Detail
-                   </button>
+                <div className="glass-card client-rel-card">
+                  <h5 className="client-rel-title">Client Relationship</h5>
+                  <div className="client-info-row">
+                    <div className="client-avatar">
+                      {getClientName(selectedProject?.clientId).charAt(0)}
+                    </div>
+                    <div>
+                      <p className="client-name">{getClientName(selectedProject?.clientId)}</p>
+                      <p className="client-subtext">View Profile</p>
+                    </div>
+                  </div>
+                  <button className="pill-button active" style={{ fontSize: '0.8rem' }} onClick={() => navigate(`/clients?id=${selectedProject?.clientId}`)}>
+                    View Client Detail
+                  </button>
                 </div>
               </div>
             )}
 
             {detailTab === 'invoices' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h5 style={{ margin: 0 }}>Invoices ({invoices.filter(inv => inv.projectId === selectedProject?._id).length})</h5>
-                  <button className="pill-button active" style={{ fontSize: '0.8rem' }} 
+              <div className="list-container">
+                <div className="section-header">
+                  <h5 className="section-title">Invoices ({invoices.filter(inv => inv.projectId === selectedProject?._id).length})</h5>
+                  <button className="pill-button active" style={{ fontSize: '0.8rem' }}
                     onClick={() => navigate(`/invoices?projectId=${selectedProject?._id}&clientId=${selectedProject?.clientId}`)}>
                     <Plus size={14} /> Add Invoice
                   </button>
                 </div>
                 {invoices.filter(inv => inv.projectId === selectedProject?._id).length > 0 ? (
                   invoices.filter(inv => inv.projectId === selectedProject?._id).map(inv => (
-                    <div key={inv._id} className="glass-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div style={{ backgroundColor: '#f0f0f0', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                    <div key={inv._id} className="glass-card invoice-row">
+                      <div className="row-info">
+                        <div className="invoice-icon">
                           <FileText size={20} color="var(--text-secondary)" />
                         </div>
                         <div>
-                          <p style={{ margin: 0, fontWeight: 'bold' }}>{inv.invoiceNumber}</p>
-                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          <p className="row-title">{inv.invoiceNumber}</p>
+                          <p className="row-subtext">
                             Issued {new Date(inv.issueDate).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>${inv.total?.toFixed(2)}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: inv.status === 'Paid' ? '#4CAF50' : '#ff9800' }}>{inv.status}</span>
+                      <div className="row-metrics">
+                        <p className="row-amount">Br {inv.total?.toFixed(2)}</p>
+                        <div className="status-row">
+                          <span className="status-text" style={{ color: inv.status === 'Paid' ? '#4CAF50' : '#ff9800' }}>{inv.status}</span>
                           {inv.status !== 'Paid' && (
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                              <button 
+                            <div className="action-buttons-compact">
+                              <button
                                 onClick={() => navigate('/payments', { state: { invoiceId: inv._id } })}
-                                style={{ 
-                                  background: '#e3f2fd', 
-                                  border: 'none', 
-                                  borderRadius: '0.4rem', 
-                                  padding: '0.2rem 0.5rem',
-                                  fontSize: '0.7rem',
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  gap: '0.3rem',
-                                  cursor: 'pointer',
-                                  color: '#1976d2'
-                                }}
+                                className="btn-compact btn-pay"
                               >
                                 Record Payment
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleMarkAsPaid(inv._id)}
-                                style={{ 
-                                  background: '#e8f5e9', 
-                                  border: 'none', 
-                                  borderRadius: '50%', 
-                                  width: '24px', 
-                                  height: '24px', 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  color: '#4CAF50'
-                                }}
+                                className="btn-mark-paid"
                                 title="Mark as Paid"
                               >
                                 <CheckCircle2 size={14} />
@@ -507,9 +464,9 @@ const Projects = () => {
             )}
 
             {detailTab === 'payments' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h5 style={{ margin: 0 }}>Payment History</h5>
+              <div className="list-container">
+                <div className="section-header">
+                  <h5 className="section-title">Payment History</h5>
                   <button className="pill-button active" style={{ fontSize: '0.8rem' }}
                     onClick={() => navigate(`/payments?projectId=${selectedProject?._id}`)}>
                     <Plus size={14} /> New Payment
@@ -523,19 +480,19 @@ const Projects = () => {
                     const invoice = invoices.find(inv => inv._id === pay.invoiceId);
                     return invoice && invoice.projectId === selectedProject?._id;
                   }).map(pay => (
-                    <div key={pay._id} className="glass-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div style={{ backgroundColor: '#e8f5e9', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                    <div key={pay._id} className="glass-card payment-row">
+                      <div className="row-info">
+                        <div className="payment-icon">
                           <DollarSign size={20} color="#4CAF50" />
                         </div>
                         <div>
-                          <p style={{ margin: 0, fontWeight: 'bold' }}>Payment for {invoices.find(i => i._id === pay.invoiceId)?.invoiceNumber}</p>
-                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          <p className="row-title">Payment for {invoices.find(i => i._id === pay.invoiceId)?.invoiceNumber}</p>
+                          <p className="row-subtext">
                             {new Date(pay.date).toLocaleDateString()} via {pay.method}
                           </p>
                         </div>
                       </div>
-                      <strong style={{ color: '#4CAF50', fontSize: '1.1rem' }}>+${pay.amount?.toLocaleString()}</strong>
+                      <strong className="row-amount" style={{ color: '#4CAF50' }}>+Br {pay.amount?.toLocaleString()}</strong>
                     </div>
                   ))
                 ) : (
@@ -547,16 +504,16 @@ const Projects = () => {
             )}
           </div>
 
-          <div style={{ borderTop: '1px solid #eee', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-             <button className="pill-button" style={{ backgroundColor: '#eee' }} onClick={() => setIsDetailModalOpen(false)}>
-               Close
-             </button>
-             <button className="pill-button active" onClick={() => {
-               handleEdit(selectedProject);
-               setIsDetailModalOpen(false);
-             }}>
-               Edit Project Details
-             </button>
+          <div className="modal-footer">
+            <button className="pill-button" style={{ backgroundColor: '#eee' }} onClick={() => setIsDetailModalOpen(false)}>
+              Close
+            </button>
+            <button className="pill-button active" onClick={() => {
+              handleEdit(selectedProject);
+              setIsDetailModalOpen(false);
+            }}>
+              Edit Project Details
+            </button>
           </div>
         </div>
       </Modal>

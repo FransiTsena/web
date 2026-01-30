@@ -31,7 +31,7 @@ const Header = ({ user }) => {
         const pendingAmount = invoices.data
           .filter(i => i.status === 'Pending')
           .reduce((sum, inv) => sum + (inv.total || inv.amount || 0), 0);
-        
+
         // Calculate monthly revenue (simple sum of payments this month)
         const now = new Date();
         const thisMonth = now.getMonth();
@@ -63,30 +63,30 @@ const Header = ({ user }) => {
       {/* Top Navigation Bar */}
       <div className="header-top">
         <h1 style={{ fontSize: '2.5rem', fontWeight: '500', margin: 0 }}>Freelance Dashboard</h1>
-        
+
         <div className="header-pills">
-          <button 
+          <button
             className={`pill-button ${location.pathname === '/' ? 'active' : ''}`}
             onClick={() => navigate('/')}
           >
             <Search size={18} />
             <span>Overview</span>
           </button>
-          <button 
+          <button
             className={`pill-button ${location.pathname === '/projects' ? 'active' : ''}`}
             onClick={() => navigate('/projects')}
           >
             <Calendar size={18} />
             <span>Timeline</span>
           </button>
-          <button 
+          <button
             className="pill-button"
             onClick={() => navigate('/expenses')}
           >
             <Activity size={18} />
             <span>Analytics</span>
           </button>
-          <button 
+          <button
             className="pill-button"
             onClick={() => navigate('/invoices')}
           >
@@ -99,10 +99,10 @@ const Header = ({ user }) => {
       {/* Profile and Quick Stats Section */}
       <div className="profile-stats-row">
         <div className="glass-card profile-card" style={{ position: 'relative' }}>
-          <div style={{ 
-            width: '80px', 
-            height: '80px', 
-            borderRadius: '20px', 
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '20px',
             overflow: 'hidden',
             backgroundColor: 'var(--accent-color)',
             display: 'flex',
@@ -119,8 +119,8 @@ const Header = ({ user }) => {
 
         <div className="glass-card profile-metrics" style={{ flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
           <StatItem label="Active Projects" value={stats.projects} subValue={`Across ${stats.clients} clients`} />
-          <StatItem label="Pending Invoices" value={stats.pendingInvoices} subValue={`$${stats.pendingAmount.toLocaleString()}`} />
-          <StatItem label="Monthly Revenue" value={`$${stats.monthlyRevenue.toLocaleString()}`} subValue="This month" />
+          <StatItem label="Pending Invoices" value={stats.pendingInvoices} subValue={`Br ${stats.pendingAmount.toLocaleString()}`} />
+          <StatItem label="Monthly Revenue" value={`Br ${stats.monthlyRevenue.toLocaleString()}`} subValue="This month" />
           <StatItem label="Completion Rate" value="100%" subValue="On-time delivery" />
           <StatItem label="Active Hours" value="0h" subValue="This month" />
         </div>

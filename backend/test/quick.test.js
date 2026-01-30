@@ -93,7 +93,7 @@ async function runQuickTests() {
             invoiceId: '123456789012345678901234',
             amount: 100,
             date: new Date().toISOString(),
-            method: 'cash'
+            method: 'Bank Transfer'
         },
         expenses: {
             description: 'Test Expense',
