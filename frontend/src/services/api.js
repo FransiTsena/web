@@ -2,10 +2,10 @@ const API_URL = 'http://localhost:5000/api';
 
 const apiFetch = async (endpoint, options = {}) => {
   const url = `${API_URL}${endpoint}`;
-  
+
   // Get token from localStorage
   const token = localStorage.getItem('token');
-  
+
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -19,7 +19,7 @@ const apiFetch = async (endpoint, options = {}) => {
     ...options,
     headers,
   });
-  
+
   if (!response.ok) {
     // If unauthorized or forbidden, clear token and redirect unless it's the login route
     if ((response.status === 401 || response.status === 403) && !endpoint.includes('/auth/login')) {
@@ -29,9 +29,9 @@ const apiFetch = async (endpoint, options = {}) => {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     throw new Error(error.error || `HTTP error! status: ${response.status}`);
   }
-  
+
   const data = await response.json();
-  return { data }; // Wrap in data property to maintain compatibility with existing axios-based code
+  return { data };
 };
 
 export const authService = {
@@ -81,13 +81,13 @@ export const expenseService = {
 };
 
 export const aiService = {
-  chat: (message, history = []) => apiFetch('/ai/chat', { 
-    method: 'POST', 
-    body: JSON.stringify({ message, history }) 
+  chat: (message, history = []) => apiFetch('/ai/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message, history })
   }),
-  execute: (type, data) => apiFetch('/ai/execute', { 
-    method: 'POST', 
-    body: JSON.stringify({ type, data }) 
+  execute: (type, data) => apiFetch('/ai/execute', {
+    method: 'POST',
+    body: JSON.stringify({ type, data })
   }),
 };
 

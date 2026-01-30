@@ -7,6 +7,7 @@ const invoiceService = {
   },
 
   getById: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return null;
     return await collections.invoices.findOne({ _id: new ObjectId(id), userId });
   },
 
@@ -41,6 +42,7 @@ const invoiceService = {
   },
 
   update: async (id, data, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     delete data._id;
 
     // Fetch existing invoice to check status transition and get current values
@@ -84,6 +86,7 @@ const invoiceService = {
   },
 
   delete: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     const result = await collections.invoices.deleteOne({ _id: new ObjectId(id), userId });
     return result.deletedCount > 0;
   }

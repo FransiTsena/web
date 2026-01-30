@@ -14,7 +14,7 @@ This document outlines the complete request-response cycle for creating a new pr
            │
            ▼
    ┌──────────────────┐
-   │  User Fills Form  │
+   │  User Fills Form │
    └─────────┬────────┘
              │
       (handleSubmit)

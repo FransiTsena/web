@@ -7,6 +7,7 @@ const projectService = {
   },
 
   getById: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return null;
     return await collections.projects.findOne({ _id: new ObjectId(id), userId });
   },
 
@@ -28,6 +29,7 @@ const projectService = {
   },
 
   update: async (id, data, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     delete data._id;
 
     // Ensure budget is a number if provided
@@ -45,6 +47,7 @@ const projectService = {
   },
 
   delete: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     const result = await collections.projects.deleteOne({ _id: new ObjectId(id), userId });
     return result.deletedCount > 0;
   }

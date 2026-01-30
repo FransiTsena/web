@@ -7,6 +7,7 @@ const expenseService = {
   },
 
   getById: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return null;
     return await collections.expenses.findOne({ _id: new ObjectId(id), userId });
   },
 
@@ -22,6 +23,7 @@ const expenseService = {
   },
 
   update: async (id, data, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     delete data._id;
     if (data.amount !== undefined) {
       data.amount = parseFloat(data.amount) || 0;
@@ -34,6 +36,7 @@ const expenseService = {
   },
 
   delete: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     const result = await collections.expenses.deleteOne({ _id: new ObjectId(id), userId });
     return result.deletedCount > 0;
   }

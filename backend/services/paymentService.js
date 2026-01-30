@@ -7,6 +7,7 @@ const paymentService = {
   },
 
   getById: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return null;
     return await collections.payments.findOne({ _id: new ObjectId(id), userId });
   },
 
@@ -22,6 +23,7 @@ const paymentService = {
   },
 
   update: async (id, data, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     delete data._id;
     if (data.amount !== undefined) {
       data.amount = parseFloat(data.amount) || 0;
@@ -34,6 +36,7 @@ const paymentService = {
   },
 
   delete: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     const result = await collections.payments.deleteOne({ _id: new ObjectId(id), userId });
     return result.deletedCount > 0;
   }

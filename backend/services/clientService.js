@@ -7,6 +7,7 @@ const clientService = {
   },
 
   getById: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return null;
     return await collections.clients.findOne({ _id: new ObjectId(id), userId });
   },
 
@@ -17,6 +18,7 @@ const clientService = {
   },
 
   update: async (id, data, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     delete data._id;
     const result = await collections.clients.updateOne(
       { _id: new ObjectId(id), userId },
@@ -26,6 +28,7 @@ const clientService = {
   },
 
   delete: async (id, userId) => {
+    if (!id || !ObjectId.isValid(id)) return false;
     const result = await collections.clients.deleteOne({ _id: new ObjectId(id), userId });
     return result.deletedCount > 0;
   }
