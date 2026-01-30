@@ -11,13 +11,21 @@ const expenseService = {
   },
 
   create: async (data, userId) => {
-    const document = { ...data, userId, createdAt: new Date() };
+    const document = {
+      ...data,
+      amount: parseFloat(data.amount) || 0,
+      userId,
+      createdAt: new Date()
+    };
     const result = await collections.expenses.insertOne(document);
     return { id: result.insertedId, ...document };
   },
 
   update: async (id, data, userId) => {
     delete data._id;
+    if (data.amount !== undefined) {
+      data.amount = parseFloat(data.amount) || 0;
+    }
     const result = await collections.expenses.updateOne(
       { _id: new ObjectId(id), userId },
       { $set: { ...data, updatedAt: new Date() } }

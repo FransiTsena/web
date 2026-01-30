@@ -66,6 +66,7 @@ const Expenses = () => {
       } else {
         await expenseService.create(payload);
       }
+      window.dispatchEvent(new Event('dataUpdated'));
       closeModal();
       fetchExpenses();
     } catch (error) {
@@ -77,6 +78,7 @@ const Expenses = () => {
     if (window.confirm('Are you sure you want to delete this expense?')) {
       try {
         await expenseService.delete(id);
+        window.dispatchEvent(new Event('dataUpdated'));
         fetchExpenses();
       } catch (error) {
         console.error('Error deleting expense:', error);

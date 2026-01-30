@@ -11,13 +11,32 @@ const projectService = {
   },
 
   create: async (data, userId) => {
-    const document = { ...data, userId, createdAt: new Date() };
+    // Ensure budget is a number, checking for both 'budget' and 'cost' (which AI sometimes uses)
+    const budgetValue = data.budget !== undefined ? data.budget : data.cost;
+    const projectData = {
+      ...data,
+      budget: parseFloat(budgetValue) || 0,
+      status: data.status || 'Ongoing'
+    };
+
+    // Remove 'cost' if it was used as an alias
+    delete projectData.cost;
+
+    const document = { ...projectData, userId, createdAt: new Date() };
     const result = await collections.projects.insertOne(document);
     return { id: result.insertedId, ...document };
   },
 
   update: async (id, data, userId) => {
     delete data._id;
+
+    // Ensure budget is a number if provided
+    if (data.budget !== undefined || data.cost !== undefined) {
+      const budgetValue = data.budget !== undefined ? data.budget : data.cost;
+      data.budget = parseFloat(budgetValue) || 0;
+      delete data.cost;
+    }
+
     const result = await collections.projects.updateOne(
       { _id: new ObjectId(id), userId },
       { $set: { ...data, updatedAt: new Date() } }

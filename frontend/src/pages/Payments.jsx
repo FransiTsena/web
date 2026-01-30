@@ -85,6 +85,7 @@ const Payments = () => {
       } else {
         await paymentService.create(payload);
       }
+      window.dispatchEvent(new Event('dataUpdated'));
       closeModal();
       fetchData();
     } catch (error) {
@@ -96,6 +97,7 @@ const Payments = () => {
     if (window.confirm('Are you sure you want to delete this payment record?')) {
       try {
         await paymentService.delete(id);
+        window.dispatchEvent(new Event('dataUpdated'));
         fetchData();
       } catch (error) {
         console.error('Error deleting payment:', error);

@@ -67,6 +67,7 @@ const Clients = () => {
       } else {
         await clientService.create(formData);
       }
+      window.dispatchEvent(new Event('dataUpdated'));
       closeModal();
       fetchItems();
     } catch (error) {
@@ -79,6 +80,7 @@ const Clients = () => {
       const invoice = invoices.find(inv => inv._id === invoiceId);
       if (invoice) {
         await invoiceService.update(invoiceId, { ...invoice, status: 'Paid' });
+        window.dispatchEvent(new Event('dataUpdated'));
         fetchItems();
       }
     } catch (error) {
@@ -90,6 +92,7 @@ const Clients = () => {
     if (window.confirm('Are you sure you want to delete this client?')) {
       try {
         await clientService.delete(id);
+        window.dispatchEvent(new Event('dataUpdated'));
         fetchItems();
       } catch (error) {
         console.error('Error deleting client:', error);

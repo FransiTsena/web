@@ -26,7 +26,7 @@ const Header = ({ user }) => {
           paymentService.getAll()
         ]);
 
-        const ongoingProjects = projects.data.filter(p => p.status === 'Ongoing' || p.status === 'In Progress').length;
+        const ongoingProjects = projects.data.filter(p => p.status === 'Ongoing' || p.status === 'In Progress' || p.status === 'in progress').length;
         const pendingInvoices = invoices.data.filter(i => i.status === 'Pending').length;
         const pendingAmount = invoices.data
           .filter(i => i.status === 'Pending')
@@ -49,13 +49,25 @@ const Header = ({ user }) => {
           pendingInvoices,
           pendingAmount,
           monthlyRevenue: monthlyRev,
-          activeHours: 0 // Hours tracking not implemented in backend yet
+          activeHours: 0 
         });
       } catch (error) {
         console.error('Error fetching header stats:', error);
       }
     };
+
     fetchStats();
+
+    // Listen for data updates from other components
+    window.addEventListener('dataUpdated', fetchStats);
+    
+    // Refresh stats when location changes (in case navigation changes something)
+    window.addEventListener('popstate', fetchStats);
+
+    return () => {
+      window.removeEventListener('dataUpdated', fetchStats);
+      window.removeEventListener('popstate', fetchStats);
+    };
   }, []);
 
   return (

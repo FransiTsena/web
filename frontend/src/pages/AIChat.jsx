@@ -33,7 +33,7 @@ const AIChat = () => {
       setMessages(prev => [...prev, { role: 'assistant', text: response.data.text }]);
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', text: 'I encountered an error connecting to my AI core. Please ensure the model is running via Ollama.' }]);
+      setMessages(prev => [...prev, { role: 'assistant', text: 'I encountered an error connecting to my AI core. Please ensure the model is running.' }]);
     } finally {
       setLoading(false);
     }
@@ -43,6 +43,7 @@ const AIChat = () => {
     try {
       // Logic mapping "PROPOSE_CREATE_PROJECT" to actual backend "CREATE_PROJECT"
       const actualType = action.type.replace('PROPOSE_', '');
+      console.log('Executing AI Action:', actualType, action.data);
       await aiService.execute(actualType, action.data);
 
       // Update message to show it was executed
@@ -50,10 +51,14 @@ const AIChat = () => {
       newMessages[index].status = 'executed';
       setMessages(newMessages);
 
+      // Notify other components that data changed
+      window.dispatchEvent(new Event('dataUpdated'));
+
       // Add a success follow-up
-      setMessages(prev => [...prev, { role: 'assistant', text: `Success! I've created the ${action.data.name || 'item'} for you.` }]);
+      setMessages(prev => [...prev, { role: 'assistant', text: `Success! I've recorded the ${action.data.name || action.type.split('_').pop().toLowerCase()} for you.` }]);
     } catch (error) {
       console.error('Action error:', error);
+      setMessages(prev => [...prev, { role: 'assistant', text: `Sorry, I couldn't execute that action: ${error.message}` }]);
     }
   };
 

@@ -106,6 +106,7 @@ const Projects = () => {
       } else {
         await projectService.create(payload);
       }
+      window.dispatchEvent(new Event('dataUpdated'));
       closeModal();
       fetchData();
     } catch (error) {
@@ -118,6 +119,7 @@ const Projects = () => {
       const invoice = invoices.find(inv => inv._id === invoiceId);
       if (invoice) {
         await invoiceService.update(invoiceId, { ...invoice, status: 'Paid' });
+        window.dispatchEvent(new Event('dataUpdated'));
         fetchData();
       }
     } catch (error) {
@@ -129,6 +131,7 @@ const Projects = () => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
         await projectService.delete(id);
+        window.dispatchEvent(new Event('dataUpdated'));
         fetchData();
       } catch (error) {
         console.error('Error deleting project:', error);

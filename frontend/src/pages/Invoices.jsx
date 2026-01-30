@@ -129,6 +129,7 @@ const Invoices = () => {
       } else {
         await invoiceService.create(formattedData);
       }
+      window.dispatchEvent(new Event('dataUpdated'));
       closeModal();
       fetchData();
     } catch (error) {
@@ -141,6 +142,7 @@ const Invoices = () => {
       const invoice = invoices.find(inv => inv._id === invoiceId);
       if (invoice) {
         await invoiceService.update(invoiceId, { ...invoice, status: 'Paid' });
+        window.dispatchEvent(new Event('dataUpdated'));
         fetchData();
         if (selectedInvoice && selectedInvoice._id === invoiceId) {
           setSelectedInvoice({ ...invoice, status: 'Paid' });
@@ -155,6 +157,7 @@ const Invoices = () => {
     if (window.confirm('Are you sure you want to delete this invoice?')) {
       try {
         await invoiceService.delete(id);
+        window.dispatchEvent(new Event('dataUpdated'));
         fetchData();
       } catch (error) {
         console.error('Error deleting invoice:', error);
