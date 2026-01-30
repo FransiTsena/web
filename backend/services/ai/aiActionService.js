@@ -21,10 +21,26 @@ const aiActionService = {
       expenseService.getAll(userId)
     ]);
 
+    // Create lookup maps for richer context
+    const clientMap = Object.fromEntries(clients.map(c => [c._id.toString(), c.name]));
+    const projectMap = Object.fromEntries(projects.map(p => [p._id.toString(), p.name]));
+
     return {
       clients: clients.map(c => ({ id: c._id, name: c.name, company: c.company })),
-      projects: projects.map(p => ({ id: p._id, name: p.name, clientId: p.clientId, status: p.status })),
-      invoices: invoices.map(i => ({ id: i._id, number: i.invoiceNumber, total: i.total, status: i.status, projectId: i.projectId })),
+      projects: projects.map(p => ({
+        id: p._id,
+        name: p.name,
+        clientName: clientMap[p.clientId] || 'Unknown',
+        status: p.status
+      })),
+      invoices: invoices.map(i => ({
+        id: i._id,
+        number: i.invoiceNumber,
+        total: i.total,
+        status: i.status,
+        projectName: projectMap[i.projectId] || 'General',
+        clientName: clientMap[i.clientId] || 'Unknown'
+      })),
       recentPayments: payments.slice(-5).map(p => ({ amount: p.amount, method: p.method, date: p.date })),
       totals: {
         revenue: payments.reduce((sum, p) => sum + (p.amount || 0), 0),
@@ -52,6 +68,19 @@ const aiActionService = {
         return await paymentService.create(params, userId);
       case 'CREATE_EXPENSE':
         return await expenseService.create(params, userId);
+
+      // Read Actions (Often used internally by AI to get more details)
+      case 'READ_CLIENT':
+        return await clientService.getById(id, userId);
+      case 'READ_PROJECT':
+        return await projectService.getById(id, userId);
+      case 'READ_INVOICE':
+        return await invoiceService.getById(id, userId);
+      case 'READ_PAYMENT':
+        return await paymentService.getById(id, userId);
+      case 'READ_EXPENSE':
+        return await expenseService.getById(id, userId);
+
       // Updates Actions
       case 'UPDATE_CLIENT':
         return await clientService.update(id, data, userId);
@@ -63,7 +92,6 @@ const aiActionService = {
         return await paymentService.update(id, data, userId);
       case 'UPDATE_EXPENSE':
         return await expenseService.update(id, data, userId);
-
       case 'UPDATE_PROJECT_STATUS':
         return await projectService.update(id, { status: data.status }, userId);
       // Delte Actions
@@ -73,6 +101,10 @@ const aiActionService = {
         return await projectService.delete(id, userId);
       case 'DELETE_INVOICE':
         return await invoiceService.delete(id, userId);
+      case 'DELETE_PAYMENT':
+        return await paymentService.delete(id, userId);
+      case 'DELETE_EXPENSE':
+        return await expenseService.delete(id, userId);
 
       default:
         throw new Error(`Unknown action type: ${cleanActionType}`);

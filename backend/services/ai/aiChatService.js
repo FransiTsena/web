@@ -25,9 +25,10 @@ const aiChatService = {
 
       Rules:
       1. CRITICAL: NEVER include an <action> tag for greetings, status updates, or general opinions.
-      2. Propose an <action> if the user wants to "create", "update/edit", or "delete" something.
-      3. Use the IDs from the Context above to link or modify items.
+      2. Propose an <action> if the user wants to "create", "update/edit", "delete", or "add/record" something.
+      3. Use the IDs from the Context above to link or modify items. BE PROACTIVE: If you find a client/invoice that matches a partial name or description (like "Peter" or "Deployment"), use that ID directly.
       4. If the user asks "how am I doing", use the 'totals' in the context to give a financial overview.
+      5. When recording a payment, use the current date (2026-01-30) unless specified otherwise.
 
       Supported Action Types:
       - PROPOSE_CREATE_CLIENT: { "name": "string", "email": "string" }
@@ -43,9 +44,22 @@ const aiChatService = {
       - PROPOSE_DELETE_CLIENT: { "id": "ID" }
       - PROPOSE_DELETE_PROJECT: { "id": "ID" }
       - PROPOSE_DELETE_INVOICE: { "id": "ID" }
+      - PROPOSE_DELETE_PAYMENT: { "id": "ID" }
+      - PROPOSE_DELETE_EXPENSE: { "id": "ID" }
+
+      - PROPOSE_UPDATE_PAYMENT: { "id": "ID", "amount": number, ... }
+      - PROPOSE_UPDATE_EXPENSE: { "id": "ID", "description": "string", ... }
+
+      Internal Read Actions (Executed immediately to give you more info):
+      - READ_CLIENT: { "id": "ID" }
+      - READ_PROJECT: { "id": "ID" }
+      - READ_INVOICE: { "id": "ID" }
+      - READ_PAYMENT: { "id": "ID" }
+      - READ_EXPENSE: { "id": "ID" }
 
       Note: For project budgets, always use the key "budget".
       Note: When updating, only include fields that need to change, but ALWAYS include the "id".
+      Note: Use READ_ actions if you need full details (like line items or deep history) before answering.
       
       Output Format:
       - Natural response.
@@ -53,35 +67,58 @@ const aiChatService = {
     `;
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      let currentPrompt = `${systemPrompt}\n\nRecent Conversation:\n${conversationContext}\nUser: ${message}\nAssistant:`;
+      let lastAiResponse = '';
+      let loopCount = 0;
+      const MAX_LOOPS = 3;
 
-      const fullPrompt = `${systemPrompt}\n\nRecent Conversation:\n${conversationContext}\nUser: ${message}\nAssistant:`;
+      while (loopCount < MAX_LOOPS) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      const response = await fetch(HOST_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: AI_MODEL,
-          prompt: fullPrompt,
-          stream: false
-        }),
-        signal: controller.signal
-      });
+        const response = await fetch(HOST_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: AI_MODEL,
+            prompt: currentPrompt,
+            stream: false
+          }),
+          signal: controller.signal
+        });
 
-      clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(`Model '${AI_MODEL}' not found.`);
+        if (!response.ok) {
+          throw new Error(`Ai responded with ${response.status}`);
         }
-        throw new Error(`Ai responded with ${response.status}`);
+
+        const data = await response.json();
+        lastAiResponse = data.response;
+
+        // Check for internal READ actions
+        const actionMatch = lastAiResponse.match(/<action>([\s\S]*?)<\/action>/);
+        if (actionMatch) {
+          try {
+            const action = JSON.parse(actionMatch[1]);
+            if (action.type.startsWith('READ_')) {
+              // Execute read immediately and continue loop
+              const result = await aiActionService.executeAction(action.type, action.data, userId);
+              currentPrompt += `${lastAiResponse}\nObservation: ${JSON.stringify(result)}\nAssistant:`;
+              loopCount++;
+              continue; // Next iteration of while loop
+            }
+          } catch (e) {
+            console.error('Error parsing internal action:', e);
+          }
+        }
+        
+        // If no READ action, or we're done, break
+        break;
       }
 
-      const data = await response.json();
-
       return {
-        text: data.response,
+        text: lastAiResponse,
       };
     } catch (error) {
       console.error('AI Service Error:', error.message);

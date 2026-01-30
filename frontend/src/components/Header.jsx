@@ -49,7 +49,7 @@ const Header = ({ user }) => {
           pendingInvoices,
           pendingAmount,
           monthlyRevenue: monthlyRev,
-          activeHours: 0 
+          activeHours: 0
         });
       } catch (error) {
         console.error('Error fetching header stats:', error);
@@ -60,7 +60,7 @@ const Header = ({ user }) => {
 
     // Listen for data updates from other components
     window.addEventListener('dataUpdated', fetchStats);
-    
+
     // Refresh stats when location changes (in case navigation changes something)
     window.addEventListener('popstate', fetchStats);
 
