@@ -12,12 +12,15 @@ const AIChat = () => {
   const chatEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const timer = setTimeout(scrollToBottom, 50);
+    return () => clearTimeout(timer);
+  }, [messages, loading]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -47,9 +50,13 @@ const AIChat = () => {
       await aiService.execute(actualType, action.data);
 
       // Update message to show it was executed
-      const newMessages = [...messages];
-      newMessages[index].status = 'executed';
-      setMessages(newMessages);
+      setMessages(prev => {
+        const next = [...prev];
+        if (next[index]) {
+          next[index] = { ...next[index], status: 'executed' };
+        }
+        return next;
+      });
 
       // Notify other components that data changed
       window.dispatchEvent(new Event('dataUpdated'));

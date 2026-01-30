@@ -3,7 +3,7 @@ const { collections } = require('../db');
 
 const paymentService = {
   getAll: async (userId) => {
-    return await collections.payments.find({ userId }).toArray();
+    return await collections.payments.find({ userId }).sort({ _id: -1 }).toArray();
   },
 
   getById: async (id, userId) => {

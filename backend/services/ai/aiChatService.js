@@ -74,11 +74,12 @@ const aiChatService = {
       Rules:
       1. CRITICAL: Use PROPOSE_CREATE_PAYMENT when a user says they "paid" or "received money". DO NOT use UPDATE_PROJECT for payments.
       2. Every payment MUST be linked to an invoice. If you can't find an invoice for the project/client, use a READ_INVOICE action or ask the user which invoice it belongs to.
-      3. Use the IDs from the Context. BE PROACTIVE: Match names to IDs automatically when possible.
+      3. Use IDs from Context. CRITICAL FOR UPDATES: To update a Payment or Expense, use its own "id" field (e.g., from recentPayments). DO NOT use the "invoiceId" for updating a payment.
       4. DO NOT explain your internal steps.
       5. Final answers MUST include a friendly natural response.
       6. Note on Data: In the "data" object of your proposal, ALWAYS include descriptive fields (like "clientName", "projectName") alongside IDs so the user can see what they are confirming.
       7. For any date fields, use ${new Date().toISOString().split('T')[0]} unless the user specifies otherwise.
+      8. Corrections: When a user says "I meant..." or "correction", they usually refer to the record they just mentioned. Look at the top of the "recentPayments" or "recentExpenses" list (which is sorted newest first) to find the correct "id".
 
       Supported Action Types:
       - PROPOSE_CREATE_CLIENT: { "name": "string", "email": "string" }

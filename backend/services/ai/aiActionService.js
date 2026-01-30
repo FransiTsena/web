@@ -24,6 +24,10 @@ const aiActionService = {
     // Create lookup maps for richer context
     const clientMap = Object.fromEntries(clients.map(c => [c._id.toString(), c.name]));
     const projectMap = Object.fromEntries(projects.map(p => [p._id.toString(), p.name]));
+    const invoiceLookup = Object.fromEntries(invoices.map(i => [i._id.toString(), {
+      projectName: projectMap[i.projectId] || 'General',
+      clientName: clientMap[i.clientId] || 'Unknown'
+    }]));
 
     return {
       clients: clients.map(c => ({ id: c._id, name: c.name, company: c.company })),
@@ -41,7 +45,24 @@ const aiActionService = {
         projectName: projectMap[i.projectId] || 'General',
         clientName: clientMap[i.clientId] || 'Unknown'
       })),
-      recentPayments: payments.slice(-5).map(p => ({ amount: p.amount, method: p.method, date: p.date })),
+      recentPayments: payments.slice(0, 10).map(p => {
+        const info = invoiceLookup[p.invoiceId] || {};
+        return {
+          id: p._id,
+          amount: p.amount,
+          method: p.method,
+          date: p.date,
+          projectName: info.projectName || 'Unknown',
+          clientName: info.clientName || 'Unknown'
+        };
+      }),
+      recentExpenses: expenses.slice(0, 10).map(e => ({
+        id: e._id,
+        description: e.description,
+        amount: e.amount,
+        category: e.category,
+        date: e.date
+      })),
       totals: {
         revenue: payments.reduce((sum, p) => sum + (p.amount || 0), 0),
         expenses: expenses.reduce((sum, e) => sum + (e.amount || 0), 0)
@@ -57,15 +78,14 @@ const aiActionService = {
     const cleanActionType = actionType.replace('PROPOSE_', '');
 
     // Extract ID if it exists (for updates/reads)
-    const { id } = params;
+    const id = params.id || params._id;
 
-    // Cleanup params before sending to services (remove descriptive AI-only fields)
+    // Remove internal AI tracking fields
+    const internalFields = ['id', '_id', 'projectName', 'clientName', 'itemName', 'summary', 'type'];
+
+    // Cleanup params before sending to services
     const cleanData = { ...params };
-    delete cleanData.id;
-    delete cleanData.projectName;
-    delete cleanData.clientName;
-    delete cleanData.itemName;
-    delete cleanData._id;
+    internalFields.forEach(field => delete cleanData[field]);
 
     // Sanitize dates to prevent "Invalid Date" errors
     if (cleanData.date) {
