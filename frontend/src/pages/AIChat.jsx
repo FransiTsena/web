@@ -9,7 +9,31 @@ const AIChat = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('Thinking...');
   const chatEndRef = useRef(null);
+
+  const loadingPhrases = [
+    'Thinking...',
+    'Fetching business context...',
+    'Analyzing records...',
+    'Consulting database...',
+    'Identifying entities...',
+    'Drafting proposal...',
+    'Reconciling client data...',
+    'Synthesizing response...'
+  ];
+
+  useEffect(() => {
+    let interval;
+    if (loading) {
+      let i = 0;
+      interval = setInterval(() => {
+        setLoadingText(loadingPhrases[i % loadingPhrases.length]);
+        i++;
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const scrollToBottom = () => {
     if (chatEndRef.current) {
@@ -62,7 +86,15 @@ const AIChat = () => {
       window.dispatchEvent(new Event('dataUpdated'));
 
       // Add a success follow-up
-      setMessages(prev => [...prev, { role: 'assistant', text: `Success! I've recorded the ${action.data.name || action.type.split('_').pop().toLowerCase()} for you.` }]);
+      const recordName = action.data.name || (action.data.invoiceNumber || action.type.split('_').pop().toLowerCase());
+      setMessages(prev => [...prev, { role: 'assistant', text: `Success! I've recorded the ${recordName} for you.` }]);
+
+      // If it was a client creation, suggest checking for projects next
+      if (actualType === 'CREATE_CLIENT') {
+        setTimeout(() => {
+          setMessages(prev => [...prev, { role: 'assistant', text: "Would you like me to proceed with creating the project for this client now?" }]);
+        }, 800);
+      }
     } catch (error) {
       console.error('Action error:', error);
       setMessages(prev => [...prev, { role: 'assistant', text: `Sorry, I couldn't execute that action: ${error.message}` }]);
@@ -160,8 +192,11 @@ const AIChat = () => {
                 <Bot size={20} />
               </div>
               <div className="loading-bubble">
-                <Loader2 size={18} className="spin" />
-                <span>Thinking...</span>
+                <div className="gemini-cli-effect">
+                  <div className="cli-cursor">></div>
+                  <Loader2 size={16} className="spin" />
+                  <span className="moving-text">{loadingText}</span>
+                </div>
               </div>
             </div>
           )}

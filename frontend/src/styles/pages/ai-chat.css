@@ -221,6 +221,42 @@
     animation: spin 1s linear infinite;
 }
 
+/* Gemini CLI Loading Effect */
+.loading-bubble {
+    background: #1e1e1e;
+    color: #00ff00;
+    padding: 0.8rem 1.2rem;
+    border-radius: 0.5rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    border: 1px solid #333;
+    min-width: 250px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.gemini-cli-effect {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.cli-cursor {
+    color: #00ff00;
+    font-weight: bold;
+    animation: blink 0.8s infinite;
+}
+
+.moving-text {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid transparent;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 @keyframes spin {
     from {
         transform: rotate(0deg);
