@@ -7,6 +7,52 @@ const AI_MODEL = process.env.AI_MODEL || 'mistral';
 const HOST_API = `${HOST_ADDRESS}/api/generate`;
 
 const aiChatService = {
+  // Helper to extract action from various formats (custom or native model tags)
+  extractAction: (text) => {
+    // 1. Try custom <action> format
+    const actionMatch = text.match(/<action>([\s\S]*?)<\/action>/);
+    if (actionMatch) {
+      try {
+        const jsonStr = actionMatch[1].replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+      } catch (e) { return null; }
+    }
+
+    // 2. Try native model tool format (DeepSeek/Mistral)
+    // Format: <｜tool▁call▁begin｜>function<｜tool▁sep｜>NAME ```json DATA ```
+    const nativeMatch = text.match(/<｜tool▁call▁begin｜>.*<｜tool▁sep｜>\s*(\w+)\s*(?:```json)?\s*(\{[\s\S]*?\})\s*(?:```)?/);
+    if (nativeMatch) {
+      try {
+        return { type: nativeMatch[1], data: JSON.parse(nativeMatch[2]) };
+      } catch (e) { return null; }
+    }
+
+    return null;
+  },
+
+  // Helper to remove internal tools/outputs from final text
+  cleanFinalResponse: (text) => {
+    return text
+      .replace(/<｜tool▁calls▁begin｜>[\s\S]*?<｜tool▁outputs▁end｜>/g, '') // Remove native tool blocks
+      .replace(/<action>([\s\S]*?)<\/action>/g, (match, content) => {
+        try {
+          // Clean the content first
+          const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
+          const action = JSON.parse(jsonStr);
+
+          // Remove internal READ actions entirely
+          if (action && action.type && action.type.startsWith('READ_')) return '';
+
+          // For PROPOSE_ actions, return a clean <action> tag with no markdown
+          return action ? `<action>${JSON.stringify(action)}</action>` : '';
+        } catch (e) {
+          // If we can't parse it even after cleaning, just remove the tag to avoid crashing UI
+          return '';
+        }
+      })
+      .trim();
+  },
+
   processChat: async (message, history = [], userId) => {
     // 1. Get system context (clients/projects) to help the AI reconcile names
     const context = await aiActionService.getSystemContext(userId);
@@ -20,50 +66,41 @@ const aiChatService = {
     const systemPrompt = `
       You are a professional business assistant for "FreelanceTracker" CRM.
       
+      Today's Date: ${new Date().toISOString().split('T')[0]} (YYYY-MM-DD)
+
       Current Business State:
       ${JSON.stringify(context, null, 2)}
 
       Rules:
-      1. CRITICAL: NEVER include an <action> tag for greetings, status updates, or general opinions.
-      2. Propose an <action> if the user wants to "create", "update/edit", "delete", or "add/record" something.
-      3. Use the IDs from the Context above to link or modify items. BE PROACTIVE: If you find a client/invoice that matches a partial name or description (like "Peter" or "Deployment"), use that ID directly.
-      4. If the user asks "how am I doing", use the 'totals' in the context to give a financial overview.
-      5. When recording a payment, use the current date (2026-01-30) unless specified otherwise.
+      1. CRITICAL: Use PROPOSE_CREATE_PAYMENT when a user says they "paid" or "received money". DO NOT use UPDATE_PROJECT for payments.
+      2. Every payment MUST be linked to an invoice. If you can't find an invoice for the project/client, use a READ_INVOICE action or ask the user which invoice it belongs to.
+      3. Use the IDs from the Context. BE PROACTIVE: Match names to IDs automatically when possible.
+      4. DO NOT explain your internal steps.
+      5. Final answers MUST include a friendly natural response.
+      6. Note on Data: In the "data" object of your proposal, ALWAYS include descriptive fields (like "clientName", "projectName") alongside IDs so the user can see what they are confirming.
+      7. For any date fields, use ${new Date().toISOString().split('T')[0]} unless the user specifies otherwise.
 
       Supported Action Types:
       - PROPOSE_CREATE_CLIENT: { "name": "string", "email": "string" }
       - PROPOSE_CREATE_PROJECT: { "name": "string", "clientId": "ID", "budget": number }
       - PROPOSE_CREATE_INVOICE: { "invoiceNumber": "string", "clientId": "ID", "projectId": "ID", "items": [{"description": "...", "quantity": 1, "price": 100}], "status": "Pending" | "Paid" }
-      - PROPOSE_CREATE_PAYMENT: { "invoiceId": "ID", "amount": number, "method": "Bank Transfer" | "Telebirr", "date": "YYYY-MM-DD" }
-      - PROPOSE_CREATE_EXPENSE: { "description": "string", "amount": number, "category": "string", "date": "YYYY-MM-DD" }
+      - PROPOSE_CREATE_PAYMENT: { "invoiceId": "ID", "amount": number, "method": "Bank Transfer" | "Telebirr", "date": "${new Date().toISOString().split('T')[0]}", "projectName": "string", "clientName": "string" }
+      - PROPOSE_CREATE_EXPENSE: { "description": "string", "amount": number, "category": "string", "date": "${new Date().toISOString().split('T')[0]}" }
       
-      - PROPOSE_UPDATE_CLIENT: { "id": "ID", "name": "string", ... }
-      - PROPOSE_UPDATE_PROJECT: { "id": "ID", "status": "In Progress" | "Completed", "budget": number, ... }
-      - PROPOSE_UPDATE_INVOICE: { "id": "ID", "status": "Paid", ... }
+      - PROPOSE_UPDATE_CLIENT/PROJECT/INVOICE/PAYMENT/EXPENSE: { "id": "ID", ...fields }
+      - PROPOSE_DELETE_CLIENT/PROJECT/INVOICE/PAYMENT/EXPENSE: { "id": "ID" }
+
+      Internal Data Retrieval (Silent):
+      - READ_CLIENT, READ_PROJECT, READ_INVOICE, READ_PAYMENT, READ_EXPENSE: { "id": "ID" }
+
+      Format:
+      - To read data: <action>{"type": "READ_PROJECT", "data": {"id": "..."}}</action>
+      - To propose a final action: Your natural response <action>{"type": "PROPOSE_...", "data": {...}, "summary": "..."}</action>
       
-      - PROPOSE_DELETE_CLIENT: { "id": "ID" }
-      - PROPOSE_DELETE_PROJECT: { "id": "ID" }
-      - PROPOSE_DELETE_INVOICE: { "id": "ID" }
-      - PROPOSE_DELETE_PAYMENT: { "id": "ID" }
-      - PROPOSE_DELETE_EXPENSE: { "id": "ID" }
-
-      - PROPOSE_UPDATE_PAYMENT: { "id": "ID", "amount": number, ... }
-      - PROPOSE_UPDATE_EXPENSE: { "id": "ID", "description": "string", ... }
-
-      Internal Read Actions (Executed immediately to give you more info):
-      - READ_CLIENT: { "id": "ID" }
-      - READ_PROJECT: { "id": "ID" }
-      - READ_INVOICE: { "id": "ID" }
-      - READ_PAYMENT: { "id": "ID" }
-      - READ_EXPENSE: { "id": "ID" }
-
-      Note: For project budgets, always use the key "budget".
-      Note: When updating, only include fields that need to change, but ALWAYS include the "id".
-      Note: Use READ_ actions if you need full details (like line items or deep history) before answering.
-      
-      Output Format:
-      - Natural response.
-      - Optional: <action>{"type": "...", "data": {...}, "summary": "..."}</action>
+      CRITICAL: ALWAYS wrap the JSON action in <action> and </action> tags. NEVER output the JSON alone. 
+      CRITICAL: ALWAYS output a natural language sentence before the action tag.
+      Rule for Dates: Use the YYYY-MM-DD format. Today is ${new Date().toISOString().split('T')[0]}.
+      Example: I've prepared the payment details for you. <action>{"type": "PROPOSE...", "data": {"date": "${new Date().toISOString().split('T')[0]}", ...}, "summary": "..."}</action>
     `;
 
     try {
@@ -97,34 +134,32 @@ const aiChatService = {
         lastAiResponse = data.response;
 
         // Check for internal READ actions
-        const actionMatch = lastAiResponse.match(/<action>([\s\S]*?)<\/action>/);
-        if (actionMatch) {
+        const action = aiChatService.extractAction(lastAiResponse);
+        if (action && action.type && action.type.startsWith('READ_')) {
           try {
-            const action = JSON.parse(actionMatch[1]);
-            if (action.type.startsWith('READ_')) {
-              // Execute read immediately and continue loop
-              const result = await aiActionService.executeAction(action.type, action.data, userId);
-              currentPrompt += `${lastAiResponse}\nObservation: ${JSON.stringify(result)}\nAssistant:`;
-              loopCount++;
-              continue; // Next iteration of while loop
-            }
+            // Execute read immediately and continue loop
+            const result = await aiActionService.executeAction(action.type, action.data, userId);
+            const observation = result ? JSON.stringify(result) : "ERROR: Record not found.";
+            currentPrompt += `${lastAiResponse}\nObservation: ${observation}\nAssistant:`;
+            loopCount++;
+            continue; // Next iteration of while loop
           } catch (e) {
-            console.error('Error parsing internal action:', e);
+            console.error('Error executing internal action:', e);
           }
         }
-        
+
         // If no READ action, or we're done, break
         break;
       }
 
       return {
-        text: lastAiResponse,
+        text: aiChatService.cleanFinalResponse(lastAiResponse),
       };
     } catch (error) {
       console.error('AI Service Error:', error.message);
 
       return {
-        text: `(AI Unavailable) I couldn't reach your local Mistral model. \n\n**Error:** ${error.message}\n**Suggested Fix:** Please ensure Ai is running and you have the model installed. I'm using ${HOST_ADDRESS}.`,
+        text: `(AI Unavailable) I couldn't reach your local model. \n\n**Error:** ${error.message}\n**Suggested Fix:** Please ensure Ai is running and you have the model installed. I'm using ${HOST_ADDRESS}.`,
       };
     }
   }

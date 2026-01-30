@@ -68,7 +68,19 @@ const AIChat = () => {
 
     if (match) {
       const textBefore = msg.text.split('<action>')[0];
-      const actionData = JSON.parse(match[1]);
+      let actionData;
+
+      try {
+        // Clean JSON from potential markdown tags
+        const jsonStr = match[1]
+          .replace(/```json/g, '')
+          .replace(/```/g, '')
+          .trim();
+        actionData = JSON.parse(jsonStr);
+      } catch (e) {
+        console.error('Failed to parse action JSON:', e);
+        return <p>{msg.text}</p>;
+      }
 
       return (
         <>
@@ -78,9 +90,11 @@ const AIChat = () => {
               <Zap size={18} />
               <span>Proposed Action</span>
             </div>
-            <h4 className="action-summary">{actionData.summary}</h4>
+            <h4 className="action-summary">
+              {actionData.summary || `Execute ${actionData.type.replace('PROPOSE_', '').replace(/_/g, ' ').toLowerCase()}`}
+            </h4>
             <pre className="action-data-preview">
-              {JSON.stringify(actionData.data, null, 2)}
+              {JSON.stringify(actionData.data || actionData, null, 2)}
             </pre>
 
             <div className="action-buttons">

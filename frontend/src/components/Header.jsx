@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Calendar, Pill, Activity, FlaskConical, Thermometer, ChevronDown } from 'lucide-react';
+import { Search, Calendar, Pill, Activity, FlaskConical, Thermometer, ChevronDown, Receipt } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { clientService, projectService, invoiceService, paymentService } from '../services/api';
+import { clientService, projectService, invoiceService, paymentService, expenseService } from '../services/api';
 
 const Header = ({ user }) => {
   const navigate = useNavigate();
@@ -13,17 +13,19 @@ const Header = ({ user }) => {
     pendingAmount: 0,
     totalBilled: 0,
     monthlyRevenue: 0,
+    monthlyExpenses: 0,
     activeHours: 0
   });
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [projects, clients, invoices, payments] = await Promise.all([
+        const [projects, clients, invoices, payments, expenses] = await Promise.all([
           projectService.getAll(),
           clientService.getAll(),
           invoiceService.getAll(),
-          paymentService.getAll()
+          paymentService.getAll(),
+          expenseService.getAll()
         ]);
 
         const ongoingProjects = projects.data.filter(p => p.status === 'Ongoing' || p.status === 'In Progress' || p.status === 'in progress').length;
@@ -36,6 +38,7 @@ const Header = ({ user }) => {
         const now = new Date();
         const thisMonth = now.getMonth();
         const thisYear = now.getFullYear();
+
         const monthlyRev = payments.data
           .filter(p => {
             const d = new Date(p.date);
@@ -43,12 +46,20 @@ const Header = ({ user }) => {
           })
           .reduce((sum, p) => sum + (p.amount || 0), 0);
 
+        const monthlyExp = expenses.data
+          .filter(e => {
+            const d = new Date(e.date);
+            return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+          })
+          .reduce((sum, e) => sum + (e.amount || 0), 0);
+
         setStats({
           projects: ongoingProjects,
           clients: clients.data.length,
           pendingInvoices,
           pendingAmount,
           monthlyRevenue: monthlyRev,
+          monthlyExpenses: monthlyExp,
           activeHours: 0
         });
       } catch (error) {
@@ -133,8 +144,8 @@ const Header = ({ user }) => {
           <StatItem label="Active Projects" value={stats.projects} subValue={`Across ${stats.clients} clients`} />
           <StatItem label="Pending Invoices" value={stats.pendingInvoices} subValue={`Br ${stats.pendingAmount.toLocaleString()}`} />
           <StatItem label="Monthly Revenue" value={`Br ${stats.monthlyRevenue.toLocaleString()}`} subValue="This month" />
+          <StatItem label="Monthly Expenses" value={`Br ${stats.monthlyExpenses.toLocaleString()}`} subValue="This month" />
           <StatItem label="Completion Rate" value="100%" subValue="On-time delivery" />
-          <StatItem label="Active Hours" value="0h" subValue="This month" />
         </div>
       </div>
 

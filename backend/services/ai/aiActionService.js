@@ -55,19 +55,37 @@ const aiActionService = {
   executeAction: async (actionType, params, userId) => {
     // Strip PROPOSE_ prefix if present
     const cleanActionType = actionType.replace('PROPOSE_', '');
-    const { id, ...data } = params;
+
+    // Extract ID if it exists (for updates/reads)
+    const { id } = params;
+
+    // Cleanup params before sending to services (remove descriptive AI-only fields)
+    const cleanData = { ...params };
+    delete cleanData.id;
+    delete cleanData.projectName;
+    delete cleanData.clientName;
+    delete cleanData.itemName;
+    delete cleanData._id;
+
+    // Sanitize dates to prevent "Invalid Date" errors
+    if (cleanData.date) {
+      const parsedDate = new Date(cleanData.date);
+      if (isNaN(parsedDate.getTime())) {
+        cleanData.date = new Date().toISOString().split('T')[0];
+      }
+    }
 
     switch (cleanActionType) {
       case 'CREATE_CLIENT':
-        return await clientService.create(params, userId);
+        return await clientService.create(cleanData, userId);
       case 'CREATE_PROJECT':
-        return await projectService.create(params, userId);
+        return await projectService.create(cleanData, userId);
       case 'CREATE_INVOICE':
-        return await invoiceService.create(params, userId);
+        return await invoiceService.create(cleanData, userId);
       case 'CREATE_PAYMENT':
-        return await paymentService.create(params, userId);
+        return await paymentService.create(cleanData, userId);
       case 'CREATE_EXPENSE':
-        return await expenseService.create(params, userId);
+        return await expenseService.create(cleanData, userId);
 
       // Read Actions (Often used internally by AI to get more details)
       case 'READ_CLIENT':
@@ -83,17 +101,17 @@ const aiActionService = {
 
       // Updates Actions
       case 'UPDATE_CLIENT':
-        return await clientService.update(id, data, userId);
+        return await clientService.update(id, cleanData, userId);
       case 'UPDATE_PROJECT':
-        return await projectService.update(id, data, userId);
+        return await projectService.update(id, cleanData, userId);
       case 'UPDATE_INVOICE':
-        return await invoiceService.update(id, data, userId);
+        return await invoiceService.update(id, cleanData, userId);
       case 'UPDATE_PAYMENT':
-        return await paymentService.update(id, data, userId);
+        return await paymentService.update(id, cleanData, userId);
       case 'UPDATE_EXPENSE':
-        return await expenseService.update(id, data, userId);
+        return await expenseService.update(id, cleanData, userId);
       case 'UPDATE_PROJECT_STATUS':
-        return await projectService.update(id, { status: data.status }, userId);
+        return await projectService.update(id, { status: cleanData.status }, userId);
       // Delte Actions
       case 'DELETE_CLIENT':
         return await clientService.delete(id, userId);
